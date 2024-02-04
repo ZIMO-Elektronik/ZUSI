@@ -1,0 +1,8 @@
+- rx::Base spi->spiSlave, gpio->gpioOutput
+- ZPP valid command (like MDU?)
+- ULF
+  - Timing documented for "Features" command is actual period
+  - Resync byte gets sent with 15µs period... WTF?
+  - Pause before resync is ~15µ
+  - Clock during feedback is indeed async, 20µ low, 10µ high
+- Personally, I'd say fuck the 3.5µ Fallback shit and go straight for 10µ (which could be used for resync as well?)
