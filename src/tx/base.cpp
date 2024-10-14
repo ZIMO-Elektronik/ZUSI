@@ -1,3 +1,7 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 /// Transmit base
 ///
 /// \file   tx/base.cpp
@@ -180,8 +184,7 @@ void Base::busy() const {
   delayUs(10u);
   writeClock(false);
   delayUs(20u);
-  while (!readData())
-    ;  // TODO timeout?
+  while (!readData());  // TODO timeout?
 }
 
 ///

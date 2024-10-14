@@ -3,8 +3,8 @@ include(FetchContent)
 
 FetchContent_Declare(
   CMakeModules
-  GIT_REPOSITORY https://github.com/ZIMO-Elektronik/CMakeModules
-  GIT_TAG v0.1.2
+  GIT_REPOSITORY "https://github.com/ZIMO-Elektronik/CMakeModules"
+  GIT_TAG v0.9.2
   SOURCE_DIR ${CMAKE_BINARY_DIR}/CMakeModules)
 FetchContent_MakeAvailable(CMakeModules)
 
@@ -40,13 +40,17 @@ endif()
 
 target_link_libraries(ZUSI PRIVATE Microsoft.GSL::GSL)
 
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+if(PROJECT_IS_TOP_LEVEL)
   include(CTest)
+  # add_subdirectory(examples)
+  file(
+    DOWNLOAD
+    "https://github.com/ZIMO-Elektronik/.github/raw/master/data/.clang-format"
+    ${CMAKE_CURRENT_LIST_DIR}/.clang-format)
+  file(GLOB_RECURSE SRC include/*.*pp tests/*.*pp)
+  add_clang_format_target(ULF_SUSIV2Format OPTIONS -i FILES ${SRC})
 endif()
 
-if(BUILD_TESTING
-   AND CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME
-   AND CMAKE_SYSTEM_NAME STREQUAL CMAKE_HOST_SYSTEM_NAME)
-  add_subdirectory(examples)
+if(BUILD_TESTING AND CMAKE_SYSTEM_NAME STREQUAL CMAKE_HOST_SYSTEM_NAME)
   add_subdirectory(tests)
 endif()
