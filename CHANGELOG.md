@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.7.1
+- Bugfix CMake always includes tests
+
 ## 0.7.0
 - Consistent spelling of 'load code'
 
