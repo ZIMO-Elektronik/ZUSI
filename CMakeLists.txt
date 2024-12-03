@@ -48,7 +48,7 @@ if(PROJECT_IS_TOP_LEVEL)
     "https://github.com/ZIMO-Elektronik/.github/raw/master/data/.clang-format"
     ${CMAKE_CURRENT_LIST_DIR}/.clang-format)
   file(GLOB_RECURSE SRC include/*.*pp tests/*.*pp)
-  add_clang_format_target(ULF_SUSIV2Format OPTIONS -i FILES ${SRC})
+  add_clang_format_target(ZUSIFormat OPTIONS -i FILES ${SRC})
 endif()
 
 if(BUILD_TESTING
