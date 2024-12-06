@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <optional>
 #include <span>
+#include <ztl/inplace_vector.hpp>
 #include "../features.hpp"
 #include "../mbps.hpp"
 
@@ -24,6 +25,9 @@ public:
   virtual constexpr ~Base() = default;
 
   void enter() const;
+
+  std::pair<bool, std::optional<ztl::inplace_vector<uint8_t, 4>>>
+  excecute(uint8_t* data);
 
   /// \param  index CV index
   std::optional<uint8_t> readCv(uint32_t addr) const;

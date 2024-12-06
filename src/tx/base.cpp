@@ -47,6 +47,29 @@ void Base::enter() const {
   delayUs(resync_timeout_us);
 }
 
+std::pair<bool, std::optional<ztl::inplace_vector<uint8_t, 4>>>
+Base::excecute(uint8_t* data) {
+  Command cmd = std::bit_cast<Command>(*data++);
+  if (cmd)
+
+  bool ret = false; 
+  std::optional<ztl::inplace_vector<uint8_t, 4>> opt = std::nullopt; 
+
+  switch (cmd) {
+    case Command::None:
+    case Command::CvRead:
+    case Command::CvWrite:
+    case Command::ZppErase:
+    case Command::ZppWrite:
+    case Command::Features:
+    case Command::Exit:
+    case Command::Encrypt:
+    default: break;
+  }
+  return std::make_pair<bool, std::optional<ztl::inplace_vector<uint8_t, 4>>>(
+    false, std::nullopt);
+}
+
 ///
 std::optional<uint8_t> Base::readCv(uint32_t addr) const {
   gsl::final_action spi_master{[this] { spiMaster(); }};
