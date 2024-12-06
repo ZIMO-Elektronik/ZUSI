@@ -6,6 +6,35 @@
 
 ZUSI is a ZIMO specific protocol for the SUSI bus. It supports downloading soundprojects in the .zpp format to multiple decoders in parallel with up to 10MBaud. In addition, ZUSI supports fast reading and writing of CVs for individual decoders. Complete documentation of the protocol (German) can be found in the `/docs` folder.
 
+## Electrical Specifications
+
+### Peripheral Configuration
+
+For ZUSI to function correctly, the SPI peripheral needs to be configured correctly. For ZUSI, the SPI uses SPIMode 1 (CPOL 0, CPHA 1) and the transmissions wille be SPI TX-only. 
+
+Also, the protocol requires the use of four different SPI clock frequencies: 
+
+|Clock Period|Bit-rate  |Baud-rate |Description|
+|:----------:|:--------:|:--------:|:--
+|10µs        |0.1Mbps   |12,5KBaud |Resync timing|
+|3,5µs       |0,286Mbps |35,75KBaud|Fallback timing. Slowest used for data transmission|
+|0,733µs     |1,364Mbps |170,5KBaud|2. fastest possible|
+|0,5533µs    |1,807Mbps |226,9KBaud|Fastest possible|
+
+These timings do not need to be matched precisely, it is acceptable to achive a slightly slower data-rate.
+
+In addition to the SPI configuration, all used pins on either host or slave need to be connected with pull-up resistors. 
+
+### Establishing the ZUSI connection
+
+To connect devices to the host, the host needs to send 0x55 for at least a second with a clock period fixed at 10ms. This is necessary to allow the decoder to evaluate the signal during its normal operation. 
+
+### General data transfer
+
+The zusi clock is given by the host with variable period (see spi frequency table). The Protocol allows the connected devices to return an answer in a specified time window (see zusi frame tables). In accordance to the SPI mode, data is clocked out on a rising clock edge and read on a falling clock edge. 
+
+The speed of transmission can be increased if the transmission stays stable to maximise data rate, but must be reduced if the transmissions become too fast for the connected devices. 
+
 ## ZUSI-Frame
 
 ZUSI uses a command specific frame structure. The first byte of each frame marks the used command, all subsequent bytes will be sent according to frame description. 
@@ -13,7 +42,7 @@ ZUSI uses a command specific frame structure. The first byte of each frame marks
 After each frame sent by the host, the connected decoders have an answer window. 
 
 ### CV Read
-Reads CV values from a decoder. Up to 256 continuous CVs can be read in one call. 
+Reads CV values from a decoder. The ZUSI specification permits up to 256 CVs to be read in one command, however this library only admits one CV at a time. 
 
 |Length|Name         |Value / Limits|Desctiption|
 |:----:|:------------|:------------:|:----------|
@@ -30,13 +59,14 @@ Reads CV values from a decoder. Up to 256 continuous CVs can be read in one call
 |1 Byte|CRC          |---           |CRC8 Checksum|
 
 ### CV Write
-Writes CV values to a decoder. Up to 256 continuous CVs can be written in one call
+Writes CV values to a decoder. The ZUSI specification permits up to 256 CVs to be read in one command, however this library only admits one CV at a time. 
 
 |Length|Name         |Value / Limits|Desctiption|
 |:----:|:------------|:------------:|:----------|
 |1 Byte|Command      |0x02          |Command code|
 |1 Byte|Count - 1    |0 - 255       |Count of CVs to write -> up to 256 CVs per call|
-|4 Byte|Count - 1    |0 - 1024      |Adress of the first CV. Currently this is restricted to a value between 0 - 1024 (May 2014)|
+|4 Byte|CV Adress    |0 - 1024      |Adress of the first CV. Currently this is restricted to a value between 0 - 1024 (May 2014)|
+|N Byte|Values (N)   |---           |Values to be written in actual order. N must be same as Count|
 |1 Byte|CRC          |---           |CRC8 Checksum|
 |1 Byte|Resync       |0x80          |Byte used for resynchronisation before the Ack, with a 10µs delay|
 |||||
@@ -113,7 +143,7 @@ This will exit the ZUSI mode and resume normal DCC operation
 |:----:|:------------|:------------:|:----------|
 |1 Byte|Command      |0x07          |Command code|
 |1 Byte|Security Byte|0x55          ||
-|1 Byte|Security Byte|0xFF          ||
+|1 Byte|Security Byte|0xAA          ||
 |1 Byte|Option       |---           |Will be masked with 0xF8:<br>0 -> 0 --> Reboot<br>0 -> 1 --> No reboot<br>1 -> 0 --> CV8 reset<br>1 -> 1 --> CV8 no reset|
 |1 Byte|CRC          |---           |CRC8 Checksum|
 |1 Byte|Resync       |0x80          |Byte used for resynchronisation befor the Ack, with a 10 µs delay|
