@@ -38,9 +38,18 @@ if(NOT TARGET Microsoft.GSL::GSL)
   cpmaddpackage("gh:microsoft/GSL@4.0.0")
 endif()
 
-cpmaddpackage("gh:ZIMO-Elektronik/ZTL@0.19.1")
+if(NOT TARGET ZTL::ZTL)
+  cpmaddpackage("gh:ZIMO-Elektronik/ZTL@0.19.1")
+endif()
 
-target_link_libraries(ZUSI PRIVATE Microsoft.GSL::GSL PUBLIC ZTL::ZTL)
+if(NOT TARGET ULF::SUSIV2)
+  cpmaddpackage("gh:ZIMO-Elektronik/ULF_SUSIV2@0.0.0#develop")
+endif()
+
+target_link_libraries(
+  ZUSI
+  PRIVATE Microsoft.GSL::GSL
+  PUBLIC ZTL::ZTL ULF::SUSIV2)
 
 if(PROJECT_IS_TOP_LEVEL)
   include(CTest)

@@ -11,6 +11,7 @@
 #include <cassert>
 #include <climits>
 #include <gsl/util>
+#include <ulf/susiv2.hpp>
 #include "buffer.hpp"
 #include "zusi.hpp"
 
@@ -47,27 +48,50 @@ void Base::enter() const {
   delayUs(resync_timeout_us);
 }
 
+///
 std::pair<bool, std::optional<ztl::inplace_vector<uint8_t, 4>>>
-Base::excecute(uint8_t* data) {
-  Command cmd = std::bit_cast<Command>(*data++);
-  if (cmd)
-
-  bool ret = false; 
-  std::optional<ztl::inplace_vector<uint8_t, 4>> opt = std::nullopt; 
+Base::excecute(std::span<uint8_t> data) {
+  Command cmd = std::bit_cast<Command>(data.front());
+  std::pair<bool, std::optional<ztl::inplace_vector<uint8_t, 4>>> ret{
+    false, std::nullopt};
 
   switch (cmd) {
-    case Command::None:
-    case Command::CvRead:
-    case Command::CvWrite:
-    case Command::ZppErase:
-    case Command::ZppWrite:
-    case Command::Features:
-    case Command::Exit:
-    case Command::Encrypt:
+    case Command::CvRead: {
+      auto val = this->readCv(**ulf::susiv2::get_adress(data));
+      ret = std::make_pair(val.has_value(), val.value());
+      break;
+    }
+    case Command::CvWrite: {
+      ret =
+        std::make_pair(this->writeCv(**ulf::susiv2::get_adress(data),
+                                     (**ulf::susiv2::get_values(data)).front()),
+                       std::nullopt);
+      break;
+    }
+    case Command::ZppErase: {
+      ret = std::make_pair(this->eraseZpp(), std::nullopt);
+      break;
+    }
+    case Command::ZppWrite: {
+      ret = std::make_pair(this->writeZpp(**ulf::susiv2::get_adress(data),
+                                          **ulf::susiv2::get_data(data)),
+                           std::nullopt);
+      break;
+    }
+    case Command::Features: {
+      ret = std::make_pair(this->features().has_value(), std::nullopt);
+      break;
+    }
+    case Command::Exit: {
+      ret = std::make_pair(this->exit(**ulf::susiv2::get_exit_flags(data)),
+                           std::nullopt);
+      break;
+    }
+    case Command::None: [[fallthough]];
+    case Command::Encrypt: [[fallthrough]];
     default: break;
   }
-  return std::make_pair<bool, std::optional<ztl::inplace_vector<uint8_t, 4>>>(
-    false, std::nullopt);
+  return ret;
 }
 
 ///
