@@ -99,6 +99,7 @@ Base::execute(std::span<uint8_t const> data) {
 std::optional<uint8_t> Base::readCv(uint32_t addr) const {
   gsl::final_action spi_master{[this] { spiMaster(); }};
   Buffer<7uz> buf;
+  std::optional<uint8_t> ret = std::nullopt;
   auto it{begin(buf)};
   *it++ = std::to_underlying(Command::CvRead);  // Command
   *it++ = 0u;                                   // Count
@@ -109,7 +110,9 @@ std::optional<uint8_t> Base::readCv(uint32_t addr) const {
   gpioInput();
   if (!ackValid() || !ack()) return {};
   busy();
-  return receiveByte();
+  ret = receiveByte();
+  if (!(crc8(ret.value()) == receiveByte())) ret = std::nullopt;
+  return ret;
 }
 
 ///
