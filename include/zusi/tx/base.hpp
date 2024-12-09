@@ -27,7 +27,7 @@ public:
   void enter() const;
 
   std::pair<bool, std::optional<ztl::inplace_vector<uint8_t, 4>>>
-  execute(std::span<uint8_t> data);
+  execute(std::span<uint8_t const> data);
 
   /// \param  index CV index
   std::optional<uint8_t> readCv(uint32_t addr) const;

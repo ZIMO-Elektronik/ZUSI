@@ -50,7 +50,7 @@ void Base::enter() const {
 
 ///
 std::pair<bool, std::optional<ztl::inplace_vector<uint8_t, 4>>>
-Base::execute(std::span<uint8_t> data) {
+Base::execute(std::span<uint8_t const> data) {
   Command cmd = std::bit_cast<Command>(data.front());
   std::pair<bool, std::optional<ztl::inplace_vector<uint8_t, 4>>> ret{
     false, std::nullopt};
