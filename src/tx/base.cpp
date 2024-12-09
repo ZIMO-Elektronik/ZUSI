@@ -58,7 +58,8 @@ Base::execute(std::span<uint8_t const> data) {
   switch (cmd) {
     case Command::CvRead: {
       auto val = this->readCv(**ulf::susiv2::get_adress(data));
-      ret = std::make_pair(val.has_value(), val.value());
+      if (val) ret = std::make_pair(val.has_value(), val.value());
+      else ret = std::make_pair(val.has_value(), std::nullopt);
       break;
     }
     case Command::CvWrite: {
