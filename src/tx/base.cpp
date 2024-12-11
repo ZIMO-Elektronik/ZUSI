@@ -74,14 +74,21 @@ Base::execute(std::span<uint8_t const> data) {
     }
     case Command::ZppWrite: {
       ret = std::make_pair(
-        this->writeZpp(
-          **ulf::susiv2::get_adress(data),
-          data.subspan(ulf::susiv2::data_pos, **ulf::susiv2::get_count(data))),
+        this->writeZpp(**ulf::susiv2::get_adress(data),
+                       data.subspan(ulf::susiv2::data_pos,
+                                    **ulf::susiv2::get_count(data) + 1)),
         std::nullopt);
       break;
     }
     case Command::Features: {
-      ret = std::make_pair(this->features().has_value(), std::nullopt);
+      auto ans = this->features();
+      if (ans) {
+        ztl::inplace_vector<uint8_t, 4> vec{};
+        std::copy(&ans.value()[0], &ans.value()[3], std::back_inserter(vec));
+        ret = std::make_pair(true, vec);
+      } else {
+        ret = std::make_pair(false, std::nullopt);
+      }
       break;
     }
     case Command::Exit: {
