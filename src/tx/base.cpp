@@ -32,7 +32,7 @@ constexpr auto uint32_2data(uint32_t word, uint8_t* data) {
   return data;
 }
 
-} // namespace
+}  // namespace
 
 ///
 void Base::enter() const {
@@ -57,13 +57,13 @@ Base::execute(std::span<uint8_t const> data) {
 
   switch (cmd) {
     case Command::CvRead: {
-      auto val = this->readCv(**ulf::susiv2::get_adress(data));
+      auto val = this->readCv(**ulf::susiv2::get_address(data));
       if (val) ret = std::make_pair(val.has_value(), val.value());
       else ret = std::make_pair(val.has_value(), std::nullopt);
       break;
     }
     case Command::CvWrite: {
-      ret = std::make_pair(this->writeCv(**ulf::susiv2::get_adress(data),
+      ret = std::make_pair(this->writeCv(**ulf::susiv2::get_address(data),
                                          data[ulf::susiv2::data_pos]),
                            std::nullopt);
       break;
@@ -74,7 +74,7 @@ Base::execute(std::span<uint8_t const> data) {
     }
     case Command::ZppWrite: {
       ret = std::make_pair(
-        this->writeZpp(**ulf::susiv2::get_adress(data),
+        this->writeZpp(**ulf::susiv2::get_address(data),
                        data.subspan(ulf::susiv2::data_pos,
                                     **ulf::susiv2::get_count(data) + 1)),
         std::nullopt);
@@ -109,10 +109,10 @@ std::optional<uint8_t> Base::readCv(uint32_t addr) const {
   Buffer<7uz> buf;
   std::optional<uint8_t> ret = std::nullopt;
   auto it{begin(buf)};
-  *it++ = std::to_underlying(Command::CvRead); // Command
-  *it++ = 0u;                                  // Count
-  it = uint32_2data(addr, it);                 // Address
-  *it = crc8({cbegin(buf), size(buf) - 1uz});  // CRC8
+  *it++ = std::to_underlying(Command::CvRead);  // Command
+  *it++ = 0u;                                   // Count
+  it = uint32_2data(addr, it);                  // Address
+  *it = crc8({cbegin(buf), size(buf) - 1uz});   // CRC8
   transmitBytes(buf, mbps_);
   resync();
   gpioInput();
@@ -128,11 +128,11 @@ bool Base::writeCv(uint32_t addr, uint8_t value) const {
   gsl::final_action spi_master{[this] { spiMaster(); }};
   Buffer<8uz> buf;
   auto it{begin(buf)};
-  *it++ = std::to_underlying(Command::CvWrite); // Command
-  *it++ = 0u;                                   // Count
-  it = uint32_2data(addr, it);                  // Address
-  *it++ = value;                                // Value
-  *it = crc8({cbegin(buf), size(buf) - 1uz});   // CRC8
+  *it++ = std::to_underlying(Command::CvWrite);  // Command
+  *it++ = 0u;                                    // Count
+  it = uint32_2data(addr, it);                   // Address
+  *it++ = value;                                 // Value
+  *it = crc8({cbegin(buf), size(buf) - 1uz});    // CRC8
   transmitBytes(buf, mbps_);
   resync();
   gpioInput();
@@ -146,10 +146,10 @@ bool Base::eraseZpp() const {
   gsl::final_action spi_master{[this] { spiMaster(); }};
   Buffer<4uz> buf;
   auto it{begin(buf)};
-  *it++ = std::to_underlying(Command::ZppErase); // Command
-  *it++ = 0x55u;                                 // Security byte
-  *it++ = 0xAAu;                                 // Security byte
-  *it = crc8({cbegin(buf), size(buf) - 1uz});    // CRC8
+  *it++ = std::to_underlying(Command::ZppErase);  // Command
+  *it++ = 0x55u;                                  // Security byte
+  *it++ = 0xAAu;                                  // Security byte
+  *it = crc8({cbegin(buf), size(buf) - 1uz});     // CRC8
   transmitBytes(buf, mbps_);
   resync();
   gpioInput();
@@ -164,11 +164,11 @@ bool Base::writeZpp(uint32_t addr, std::span<uint8_t const> bytes) const {
   gsl::final_action spi_master{[this] { spiMaster(); }};
   Buffer buf;
   auto it{begin(buf)};
-  *it++ = std::to_underlying(Command::ZppWrite);    // Command
-  *it++ = size(bytes) - 1uz;                        // Count
-  it = uint32_2data(addr, it);                      // Address
-  it = std::copy_n(cbegin(bytes), size(bytes), it); // Data
-  *it = crc8({begin(buf), 6uz + size(bytes)});      // CRC8
+  *it++ = std::to_underlying(Command::ZppWrite);     // Command
+  *it++ = size(bytes) - 1uz;                         // Count
+  it = uint32_2data(addr, it);                       // Address
+  it = std::copy_n(cbegin(bytes), size(bytes), it);  // Data
+  *it = crc8({begin(buf), 6uz + size(bytes)});       // CRC8
   transmitBytes({cbegin(buf), 6uz + size(bytes) + 1uz}, mbps_);
   resync();
   gpioInput();
@@ -182,8 +182,8 @@ std::optional<Features> Base::features() {
   gsl::final_action spi_master{[this] { spiMaster(); }};
   Buffer<2uz> buf;
   auto it{begin(buf)};
-  *it++ = std::to_underlying(Command::Features); // Command
-  *it = crc8({cbegin(buf), size(buf) - 1uz});    // CRC8
+  *it++ = std::to_underlying(Command::Features);  // Command
+  *it = crc8({cbegin(buf), size(buf) - 1uz});     // CRC8
   transmitBytes(buf, mbps_);
   resync();
   gpioInput();
@@ -202,11 +202,11 @@ bool Base::exit(uint8_t flags) const {
   gsl::final_action spi_master{[this] { spiMaster(); }};
   Buffer<5uz> buf;
   auto it{begin(buf)};
-  *it++ = std::to_underlying(Command::Exit);  // Command
-  *it++ = 0x55u;                              // Security byte
-  *it++ = 0xAAu;                              // Security byte
-  *it++ = flags;                              // Flags
-  *it = crc8({cbegin(buf), size(buf) - 1uz}); // CRC8
+  *it++ = std::to_underlying(Command::Exit);   // Command
+  *it++ = 0x55u;                               // Security byte
+  *it++ = 0xAAu;                               // Security byte
+  *it++ = flags;                               // Flags
+  *it = crc8({cbegin(buf), size(buf) - 1uz});  // CRC8
   transmitBytes(buf, mbps_);
   resync();
   gpioInput();
@@ -243,7 +243,7 @@ void Base::busy() const {
   delayUs(10u);
   writeClock(false);
   delayUs(20u);
-  while (!readData()); // TODO timeout?
+  while (!readData());  // TODO timeout?
 }
 
 ///
@@ -259,4 +259,4 @@ uint8_t Base::receiveByte() const {
   return byte;
 }
 
-} // namespace zusi::tx
+}  // namespace zusi::tx
