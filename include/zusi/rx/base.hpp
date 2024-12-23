@@ -89,7 +89,7 @@ private:
   ///
   /// \param  state State
   /// \return true  Clock equals state
-  /// \return false Timeout occured
+  /// \return false Timeout occurred
   virtual bool waitClock(bool state) const = 0;
 
   /// Set data to state

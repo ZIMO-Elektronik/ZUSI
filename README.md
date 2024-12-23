@@ -1,10 +1,10 @@
-# :construction: ZUSI :construction:
+# ZUSI
 
 [![build](https://github.com/ZIMO-Elektronik/ZUSI/actions/workflows/build.yml/badge.svg)](https://github.com/ZIMO-Elektronik/ZUSI/actions/workflows/build.yml) [![tests](https://github.com/ZIMO-Elektronik/ZUSI/actions/workflows/tests.yml/badge.svg)](https://github.com/ZIMO-Elektronik/ZUSI/actions/workflows/tests.yml) [![license](https://img.shields.io/github/license/ZIMO-Elektronik/ZUSI)](https://github.com/ZIMO-Elektronik/ZUSI/raw/master/LICENSE)
 
 <img src="data/images/logo.jpg" width="80" align="right"/>
 
-ZUSI is a ZIMO specific protocol for the SUSI bus. It supports [ZPP](https://github.com/ZIMO-Elektronik/ZPP) updates to multiple decoders in parallel with up to 10MBaud. In addition, ZUSI supports fast reading and writing of CVs for individual decoders. The protocol is currently supported by the following products:
+ZUSI is a ZIMO specific protocol for the SUSI bus. It supports [ZPP](https://github.com/ZIMO-Elektronik/ZPP) updates to multiple decoders in parallel with up to 10MBaud. In addition, it also supports fast reading and writing of CVs for individual decoders. The protocol is currently supported by the following products:
 - Command stations
   - [ZIMO MXULF](https://www.zimo.at/web2010/products/InfMXULF_EN.htm)
 - Decoders
@@ -12,47 +12,58 @@ ZUSI is a ZIMO specific protocol for the SUSI bus. It supports [ZPP](https://git
   - [ZIMO small-](http://www.zimo.at/web2010/products/ms-sound-decoder_EN.htm) and [large-scale MS decoders](http://www.zimo.at/web2010/products/ms-sound-decoder-grossbahn_EN.htm)
   - [ZIMO small-](http://www.zimo.at/web2010/products/lokdecoder_EN.htm) and [large-scale MX decoders](http://www.zimo.at/web2010/products/lokdecodergrosse_EN.htm)
 
-## Electrical Specifications
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li><a href="#electrical-specification">Electrical Specification</a></li>
+      <ul>
+        <li><a href="#peripheral-configuration">Peripheral Configuration</a></li>
+      </ul>
+    <li><a href="#getting-started">Getting Started</a></li>
+      <ul>
+        <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#installation">Installation</a></li>
+        <li><a href="#build">Build</a></li>
+      </ul>
+    <li><a href="#usage">Usage</a></li>
+  </ol>
+</details>
 
+## Electrical Specification
 The ZUSI uses a combination of peripheral functions. Standard SPI (Mode1) is used for data transmission, GPIO I/O is used for decoder answer and busy phase. 
 
 ### Peripheral Configuration
-
 For ZUSI to function correctly, the SPI peripheral needs to be configured correctly. For ZUSI, the SPI uses SPIMode 1 (CPOL 0, CPHA 1) and the transmissions will be SPI TX-only. The SPI needs to operate in LSB first mode
 
 Also, the protocol requires the use of four different SPI clock frequencies: 
 
-|Clock Period|Bit-rate  |Baud-rate |Description|
-|:----------:|:--------:|:--------:|:--
-|10µs        |0.1Mbps   |12,5KBaud |Resync timing|
-|3,5µs       |0,286Mbps |35,75KBaud|Fallback timing. Slowest used for data transmission|
-|0,733µs     |1,364Mbps |170,5KBaud|2. fastest possible|
-|0,5533µs    |1,807Mbps |226,9KBaud|Fastest possible|
+| Clock Period [µs] | Bit Rate [Mbps] | Baud Rate [kBaud] | Description                                         |
+| ----------------- | --------------- | ----------------- | --------------------------------------------------- |
+| 10                | 0.1             | 12.5              | Resync timing                                       |
+| 3.5               | 0.286           | 35.75             | Fallback timing, slowest used for data transmission |
+| 0.733             | 1.364           | 170.5             | 2. fastest possible                                 |
+| 0.5533            | 1.807           | 226.9             | Fastest possible                                    |
 
 These timings do not need to be matched precisely, it is acceptable to achieve a slightly slower data-rate.
 
 In addition to the SPI configuration, all used pins on either host or slave need to be connected with pull-up resistors. 
 
-### Establishing the ZUSI connection
-
+### Establishing a Connection
 To connect devices to the host, the host needs to send 0x55 for at least a second with a clock period fixed at 10ms. This is necessary to allow the decoder to evaluate the signal during its normal operation. 
 
-### General data transfer
-
+### General Data Transfer
 The ZUSI clock is given by the host with variable period (see SPI frequency table). The Protocol allows the connected devices to return an answer in a specified time window (see ZUSI frame tables). In accordance to the SPI mode, data is clocked out on a rising clock edge and read on a falling clock edge. 
 
 The speed of transmission can be increased if the transmission stays stable to maximize data rate, but must be reduced if the transmissions become too fast for the connected devices. 
 
 To simplify finding the correct transmission speed, the FeatureRequest command was implemented to ask the maximum supported transmission speed of the devices. Details can be found in the Feature request frame table.
 
-### Resynchronisation phase
-
-To avoid problems with the MX644, a resynchronisation phase was introduced between host transmission and device answer. This consists of a 10µs delay, with a following transmission of 0x80. The clock period for the transmission is 10µs, which results in a frequency of 0,1Mbps (or 12,5KBaud).
+### Resynchronisation Phase
+To avoid problems with the MX644, a resynchronisation phase was introduced between host transmission and device answer. This consists of a 10µs delay, with a following transmission of 0x80. The clock period for the transmission is 10µs, which results in a frequency of 0,1Mbps (or 12,5kBaud).
 
 To catch asynchronous behavior, the state-machine of a decoder will be reset after 10ms (20ms for MSDecoder) of no activity on ZUSI clock. This can be used to resynch all decoders. 
 
-### Answer phase
-
+### Answer Phase
 After the last bit of the host transmission (after the resynchronisation phase), the host switches the ZUSI data line to input (with pull-up). The decoder will send a two bit answer, one ACK valid and one ACK (in this order). 
 
 ACK valid is low. This verifies that at least one decoder is still connected and received the transmission. If the ACK valid is high, no decoder was able to receive the transmission. (Wired-OR) 
@@ -61,12 +72,10 @@ ACK is high (NAK is low), if all decoders were able to complete the command. If 
 
 To integrate the MX644, the answer phase is asymmetric. The low period of clock is defined with 20µs, the high period with 10µs. Both ACK valid and ACK/NAK will be set by the decoder on a rising edge on clock and can be read on the falling edge. 
 
-### Busy phase
-
+### Busy Phase
 Some commands (e.g. DeleteFlash or WriteFlash) have built-in busy to signal the command still being processed on at least one decoder. This is achieved through the decoder pulling the data line to logical low and holding this state. When the decoder is finished, it needs to release the data line again, but only after the clock line is high again (signaling that the answer phase is complete). This results in a "Wired-AND", which will result in a logical high only if all decoders are finished with the command. The host clock is suspended during the busy phase. 
 
-## ZUSI-Frame
-
+## ZUSI Frame
 ZUSI uses a command specific frame structure. The first byte of each frame marks the used command, all subsequent bytes will be sent according to frame description. 
 
 After each frame sent by the host, the connected decoders have an answer window. 
@@ -104,7 +113,7 @@ Writes CV values to a decoder. The ZUSI specification permits up to 256 CVs to b
 |1 Bit |ACK          |---           |1 = ACK - 0 = NACK|
 |x Bits|Busy         |---           |0 while device is still busy|
 
-### Request flash block size
+### Request Flash Block Size
 Requests the flash block size of the decoder. This will give a size limit for data packages targetting this decoder.
 
 |Length|Name         |Value / Limits|Desctiption|
@@ -118,7 +127,7 @@ Requests the flash block size of the decoder. This will give a size limit for da
 |x Bits|Busy         |---           |0 while device is still busy|
 |1 Byte|Block size   |---           |Block size of the decoder flash|
 
-### Delete flash
+### Delete Flash
 Deletes the flash memory of the decoder. 
 
 |Length|Name         |Value / Limits|Desctiption|
@@ -133,7 +142,7 @@ Deletes the flash memory of the decoder.
 |1 Bit |ACK          |---           |1 = ACK - 0 = NACK|
 |x Bits|Busy         |---           |0 while device is still busy|
 
-### Write flash
+### Write Flash
 Writes data directly to the flash of the decoder
 
 |Length|Name         |Value / Limits|Desctiption|
@@ -149,7 +158,7 @@ Writes data directly to the flash of the decoder
 |1 Bit |ACK          |---           |1 = ACK - 0 = NACK|
 |x Bits|Busy         |---           |0 while device is still busy|
 
-### Feature request
+### Feature Request
 Requests the transmission capabilities of connected decoders. Feature bits (see Baudrate and Multiple) will be pulled to 0 when at least one decoder does not support the corresponding feature. 
 
 |Length|Name         |Value / Limits|Desctiption|
@@ -183,7 +192,7 @@ This will exit the ZUSI mode and resume normal DCC operation
 |x Bits|Busy         |---           |0 while device is still busy|
 
 
-## Beispiele
+## Usage
 Currently there is just a single class intended for use. This class is
 - zusi::rx::Base
 
