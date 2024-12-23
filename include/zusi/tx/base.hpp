@@ -83,4 +83,4 @@ private:
   Mbps mbps_{Mbps::_0_286};
 };
 
-}  // namespace zusi::tx
+} // namespace zusi::tx

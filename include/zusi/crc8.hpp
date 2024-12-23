@@ -49,4 +49,4 @@ constexpr uint8_t crc8(std::span<uint8_t const> bytes) {
     [](uint8_t a, uint8_t b) { return crc8(static_cast<uint8_t>(a ^ b)); });
 }
 
-}  // namespace zusi
+} // namespace zusi

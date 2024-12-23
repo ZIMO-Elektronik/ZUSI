@@ -16,12 +16,12 @@
 
 namespace zusi {
 
-template<size_t I = 1uz +    // Command
-                    1uz +    // Length
-                    4uz +    // Address
-                    256uz +  // Data
-                    1uz +    // CRC
+template<size_t I = 1uz +   // Command
+                    1uz +   // Length
+                    4uz +   // Address
+                    256uz + // Data
+                    1uz +   // CRC
                     1uz>
-using Buffer = std::array<uint8_t, I>;  // Resync
+using Buffer = std::array<uint8_t, I>; // Resync
 
-}  // namespace zusi
+} // namespace zusi

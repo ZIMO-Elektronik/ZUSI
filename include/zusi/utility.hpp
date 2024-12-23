@@ -54,4 +54,4 @@ constexpr auto data2uint32(uint8_t const* data) {
                                data[2uz] << 8u | data[3uz] << 0u);
 }
 
-}  // namespace zusi
+} // namespace zusi

@@ -132,10 +132,10 @@ private:
   /// Receive/transmit buffer
   Buffer<> buf_{};
 
-  size_t bytes_count_{};  ///< Bytecount
-  uint32_t crc_{};        ///< CRC8
-  State state_{};         ///< State
-  bool ack_{};            ///< Ack/nack state
+  size_t bytes_count_{}; ///< Bytecount
+  uint32_t crc_{};       ///< CRC8
+  State state_{};        ///< State
+  bool ack_{};           ///< Ack/nack state
 };
 
-}  // namespace zusi::rx
+} // namespace zusi::rx

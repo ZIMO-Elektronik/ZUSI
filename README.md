@@ -4,7 +4,13 @@
 
 <img src="data/images/logo.jpg" width="80" align="right"/>
 
-ZUSI is a ZIMO specific protocol for the SUSI bus. It supports downloading sound projects in the .zpp format to multiple decoders in parallel with up to 10MBaud. In addition, ZUSI supports fast reading and writing of CVs for individual decoders. Complete documentation of the protocol (German) can be found in the `/docs` folder.
+ZUSI is a ZIMO specific protocol for the SUSI bus. It supports [ZPP](https://github.com/ZIMO-Elektronik/ZPP) updates to multiple decoders in parallel with up to 10MBaud. In addition, ZUSI supports fast reading and writing of CVs for individual decoders. The protocol is currently supported by the following products:
+- Command stations
+  - [ZIMO MXULF](https://www.zimo.at/web2010/products/InfMXULF_EN.htm)
+- Decoders
+  - [ZIMO MN decoders](http://www.zimo.at/web2010/products/mn-nicht-sound-decoder_EN.htm)
+  - [ZIMO small-](http://www.zimo.at/web2010/products/ms-sound-decoder_EN.htm) and [large-scale MS decoders](http://www.zimo.at/web2010/products/ms-sound-decoder-grossbahn_EN.htm)
+  - [ZIMO small-](http://www.zimo.at/web2010/products/lokdecoder_EN.htm) and [large-scale MX decoders](http://www.zimo.at/web2010/products/lokdecodergrosse_EN.htm)
 
 ## Electrical Specifications
 
