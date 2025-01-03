@@ -17,6 +17,7 @@
 #include "../command.hpp"
 #include "../crc8.hpp"
 #include "../features.hpp"
+#include "../packet.hpp"
 #include "../utility.hpp"
 
 namespace zusi::rx {
@@ -130,12 +131,12 @@ private:
   bool ackOrNack();
 
   /// Receive/transmit buffer
-  Buffer<> buf_{};
+  Buffer<> _buf{};
 
-  size_t bytes_count_{}; ///< Bytecount
-  uint32_t crc_{};       ///< CRC8
-  State state_{};        ///< State
-  bool ack_{};           ///< Ack/nack state
+  size_t _bytes_count{}; ///< Bytecount
+  uint32_t _crc{};       ///< CRC8
+  State _state{};        ///< State
+  bool _ack{};           ///< Ack/nack state
 };
 
 } // namespace zusi::rx
