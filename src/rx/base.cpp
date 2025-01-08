@@ -21,7 +21,7 @@ void Base::execute() {
       _state = receiveCommand();
       break;
     case State::ReceiveData: _state = receiveData(); break;
-    case State::ReceiveResynch: _state = receiveResynch(); break;
+    case State::ReceiveResync: _state = receiveResync(); break;
     case State::TransmitAck: _state = transmitAck(); break;
     case State::TransmitBusy: _state = transmitBusy(); break;
     case State::TransmitData: _state = transmitData(); break;
@@ -55,13 +55,13 @@ Base::State Base::receiveData() {
     case Command::Encrypt: success = receiveBytes({&_buf[1uz], 5uz}); break;
     default: break;
   }
-  return success ? State::ReceiveResynch : State::Error;
+  return success ? State::ReceiveResync : State::Error;
 }
 
-/// Receive resynch byte
+/// Receive resync byte
 ///
 /// \return State
-Base::State Base::receiveResynch() {
+Base::State Base::receiveResync() {
   _ack = ackOrNack();
   if (auto const retval{receiveByte()}; !retval) return State::Error;
   else if (*retval == resync_byte) {
@@ -192,21 +192,21 @@ bool Base::transmitByte(uint8_t byte) const {
 /// \return true  Acknowledge
 /// \return false Not acknowledge
 bool Base::ackOrNack() {
-  bool const _crcok{!_crc};
+  bool const crc_ok{!_crc};
   _crc = 0u;
   switch (static_cast<Command>(_buf[0uz])) {
     // Requires only CRC
     case Command::CvRead: [[fallthrough]];
     case Command::CvWrite: [[fallthrough]];
     case Command::Features: [[fallthrough]];
-    case Command::Encrypt: return _crcok ? true : false;
+    case Command::Encrypt: return crc_ok ? true : false;
     // Requires CRC and address validation by decryption
     case Command::ZppWrite:
-      return _crcok && addressValid(data2uint32(&_buf[2uz])) ? true : false;
+      return crc_ok && addressValid(data2uint32(&_buf[2uz])) ? true : false;
     // Requires CRC and safety bytes
     case Command::ZppErase: [[fallthrough]];
     case Command::Exit:
-      return _crcok && _buf[1uz] == 0x55u && _buf[2uz] == 0xAAu ? true : false;
+      return crc_ok && _buf[1uz] == 0x55u && _buf[2uz] == 0xAAu ? true : false;
     default: break;
   }
   return false;

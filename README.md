@@ -61,7 +61,7 @@ To simplify finding the correct transmission speed, the FeatureRequest command w
 ### Resynchronisation Phase
 To avoid problems with the MX644, a resynchronisation phase was introduced between host transmission and device answer. This consists of a 10µs delay, with a following transmission of 0x80. The clock period for the transmission is 10µs, which results in a frequency of 0,1Mbps (or 12,5kBaud).
 
-To catch asynchronous behavior, the state-machine of a decoder will be reset after 10ms (20ms for MSDecoder) of no activity on ZUSI clock. This can be used to resynch all decoders. 
+To catch asynchronous behavior, the state-machine of a decoder will be reset after 10ms (20ms for MSDecoder) of no activity on ZUSI clock. This can be used to resync all decoders. 
 
 ### Answer Phase
 After the last bit of the host transmission (after the resynchronisation phase), the host switches the ZUSI data line to input (with pull-up). The decoder will send a two bit answer, one ACK valid and one ACK (in this order). 

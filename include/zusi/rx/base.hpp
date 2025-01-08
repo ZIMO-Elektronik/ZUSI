@@ -109,7 +109,7 @@ private:
   enum class State : uint8_t {
     ReceiveCommand,
     ReceiveData,
-    ReceiveResynch,
+    ReceiveResync,
     TransmitAck,
     TransmitBusy,
     TransmitData,
@@ -118,7 +118,7 @@ private:
 
   State receiveCommand();
   State receiveData();
-  State receiveResynch();
+  State receiveResync();
   State transmitAck();
   State transmitBusy();
   State transmitData();
