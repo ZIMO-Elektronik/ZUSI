@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <zusi/zusi.hpp>
-#include "mock_zusi.hpp"
+#include "tx_mock.hpp"
 
 using ::testing::_;
 using ::testing::ElementsAre;
@@ -19,7 +19,7 @@ using ::zusi::resync_byte;
 inline constexpr uint32_t mock_addr{0x000000FFu};
 
 TEST(cvread, no_ACK_valid) {
-  MockZUSI zusi{};
+  TxMock zusi{};
   {
     InSequence seq;
     EXPECT_CALL(zusi, transmitBytes(_, Ne(_0_1)));
@@ -32,7 +32,7 @@ TEST(cvread, no_ACK_valid) {
 }
 
 TEST(cvread, NAK) {
-  NiceMock<MockZUSI> zusi{};
+  NiceMock<TxMock> zusi{};
   {
     InSequence seq;
     EXPECT_CALL(zusi, transmitBytes(_, Ne(_0_1)));
@@ -46,7 +46,7 @@ TEST(cvread, NAK) {
 }
 
 TEST(cvread, busy_wait) {
-  NiceMock<MockZUSI> zusi{};
+  NiceMock<TxMock> zusi{};
   {
     InSequence seq;
     EXPECT_CALL(zusi, transmitBytes(_, Ne(_0_1)));
@@ -64,7 +64,7 @@ TEST(cvread, busy_wait) {
 }
 
 TEST(cvread, crc8_answer) {
-  NiceMock<MockZUSI> zusi{};
+  NiceMock<TxMock> zusi{};
   {
     InSequence seq;
     EXPECT_CALL(zusi, transmitBytes(_, Ne(_0_1)));
@@ -84,7 +84,7 @@ TEST(cvread, crc8_answer) {
 }
 
 TEST(cvread, ACK) {
-  NiceMock<MockZUSI> zusi{};
+  NiceMock<TxMock> zusi{};
   {
     InSequence seq;
     EXPECT_CALL(zusi,
@@ -100,7 +100,7 @@ TEST(cvread, ACK) {
     EXPECT_CALL(zusi, readData()).Times(8);               // CRC8
     EXPECT_CALL(zusi, spiMaster());
   }
-  auto tmp = zusi.readCv(mock_addr);
+  auto tmp{zusi.readCv(mock_addr)};
   ASSERT_TRUE(tmp) << "Should return CV value if command is correct";
   ASSERT_EQ(*tmp, 0x00)
     << "Should return data the decoder sent (see Receive data)";

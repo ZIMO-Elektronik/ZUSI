@@ -4,7 +4,7 @@
 using ::zusi::Mbps;
 using ::zusi::tx::Base;
 
-class MockZUSI : public Base {
+class TxMock : public Base {
 public:
   MOCK_METHOD(void,
               transmitBytes,

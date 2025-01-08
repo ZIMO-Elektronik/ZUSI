@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <zusi/zusi.hpp>
-#include "mock_zusi.hpp"
+#include "tx_mock.hpp"
 
 using ::testing::_;
 using ::testing::ElementsAre;
@@ -16,8 +16,11 @@ using ::Mbps::_1_364;
 using ::Mbps::_1_807;
 using ::zusi::resync_byte;
 
-TEST(erasezpp, no_ACK_valid) {
-  MockZUSI zusi{};
+inline constexpr uint32_t mock_addr{0x000000FFu};
+inline constexpr uint8_t mock_val{0x0F};
+
+TEST(cvwrite, no_ACK_valid) {
+  TxMock zusi{};
   {
     InSequence seq;
     EXPECT_CALL(zusi, transmitBytes(_, Ne(_0_1)));
@@ -26,11 +29,12 @@ TEST(erasezpp, no_ACK_valid) {
     EXPECT_CALL(zusi, readData()).WillOnce(Return(true)); // not ACK valid
     EXPECT_CALL(zusi, spiMaster());
   }
-  ASSERT_FALSE(zusi.eraseZpp()) << "Should abort if not ACK valid";
+  ASSERT_FALSE(zusi.writeCv(mock_addr, mock_val))
+    << "Should abort if not ACK valid";
 }
 
-TEST(erasezpp, NAK) {
-  NiceMock<MockZUSI> zusi{};
+TEST(cvwrite, NAK) {
+  NiceMock<TxMock> zusi{};
   {
     InSequence seq;
     EXPECT_CALL(zusi, transmitBytes(_, Ne(_0_1)));
@@ -40,11 +44,11 @@ TEST(erasezpp, NAK) {
     EXPECT_CALL(zusi, readData()); // NAK
     EXPECT_CALL(zusi, spiMaster());
   }
-  ASSERT_FALSE(zusi.eraseZpp()) << "Should abort after NAK";
+  ASSERT_FALSE(zusi.writeCv(mock_addr, mock_val)) << "Should abort after NAK";
 }
 
-TEST(erasezpp, busy_wait) {
-  NiceMock<MockZUSI> zusi{};
+TEST(cvwrite, busy_wait) {
+  NiceMock<TxMock> zusi{};
   {
     InSequence seq;
     EXPECT_CALL(zusi, transmitBytes(_, Ne(_0_1)));
@@ -56,15 +60,19 @@ TEST(erasezpp, busy_wait) {
     EXPECT_CALL(zusi, readData()).WillOnce(Return(true)); // Busy End
     EXPECT_CALL(zusi, spiMaster());
   }
-  ASSERT_TRUE(zusi.eraseZpp()) << "Should continue after no longer busy";
+  ASSERT_TRUE(zusi.writeCv(mock_addr, mock_val))
+    << "Should continue after no longer busy";
 }
 
-TEST(erasezpp, ACK) {
-  NiceMock<MockZUSI> zusi{};
+TEST(cvwrite, ACK) {
+  NiceMock<TxMock> zusi{};
   {
     InSequence seq;
     EXPECT_CALL(
-      zusi, transmitBytes(ElementsAre(0x04u, 0x55u, 0xAAu, 0xC7u), Ne(_0_1)));
+      zusi,
+      transmitBytes(
+        ElementsAre(0x02u, 0x00u, 0x00u, 0x00u, 0x00u, 0xFFu, 0x0Fu, 0xBAu),
+        Ne(_0_1)));
     EXPECT_CALL(zusi, transmitBytes(ElementsAre(resync_byte), _0_1));
     EXPECT_CALL(zusi, gpioInput());
     EXPECT_CALL(zusi, readData());                        // ACK valid
@@ -72,6 +80,6 @@ TEST(erasezpp, ACK) {
     EXPECT_CALL(zusi, readData()).WillOnce(Return(true)); // Busy
     EXPECT_CALL(zusi, spiMaster());
   }
-  auto tmp = zusi.eraseZpp();
+  auto tmp = zusi.writeCv(mock_addr, mock_val);
   ASSERT_TRUE(tmp) << "Should return true if command is correct";
 }
