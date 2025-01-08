@@ -63,8 +63,8 @@ Base::State Base::receiveData() {
 /// \return State
 Base::State Base::receiveResynch() {
   _ack = ackOrNack();
-  if (uint8_t byte; !receiveByte(&byte)) return State::Error;
-  else if (byte == resync_byte) {
+  if (auto const retval{receiveByte()}; !retval) return State::Error;
+  else if (*retval == resync_byte) {
     gpio();
     return State::TransmitAck;
   } else return State::Error;
@@ -164,10 +164,12 @@ Base::State Base::reset() {
 /// \return true  Success
 /// \return false Failure
 bool Base::receiveBytes(std::span<uint8_t> dest) {
-  for (auto& byte : dest) {
-    if (!receiveByte(&byte)) return false;
-    _crc = crc8(static_cast<uint8_t>(byte ^ _crc));
-  }
+  for (auto& byte : dest)
+    if (auto const retval{receiveByte()}; !retval) return false;
+    else {
+      byte = *retval;
+      _crc = crc8(static_cast<uint8_t>(byte ^ _crc));
+    }
   return true;
 }
 

@@ -16,7 +16,7 @@ public:
               ((std::span<uint8_t const, 4uz>)),
               (const, override));
   MOCK_METHOD(bool, addressValid, (uint32_t), (const, override));
-  MOCK_METHOD(bool, receiveByte, (uint8_t*), (const, override));
+  MOCK_METHOD(std::optional<uint8_t>, receiveByte, (), (const, override));
   MOCK_METHOD(bool, waitClock, (bool), (const, override));
   MOCK_METHOD(void, writeData, (bool), (const, override));
   MOCK_METHOD(void, toggleLights, (), (const, override));

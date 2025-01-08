@@ -17,7 +17,7 @@ using ::zusi::resync_byte;
 inline constexpr uint32_t mock_addr{0x000000FFu};
 inline constexpr uint8_t mock_val{0x0Fu};
 
-TEST_F(TxTest, write_zpp_no_ACK_valid) {
+TEST_F(TxTest, write_zpp_no_ack_valid) {
   std::span<uint8_t const> mock_vals{&mock_val, 1u};
 
   InSequence seq;
@@ -31,7 +31,7 @@ TEST_F(TxTest, write_zpp_no_ACK_valid) {
     << "Should abort if not ACK valid";
 }
 
-TEST_F(TxTest, write_zpp_NAK) {
+TEST_F(TxTest, write_zpp_nak) {
   std::span<uint8_t const> mock_vals{&mock_val, 1u};
 
   InSequence seq;
@@ -63,7 +63,7 @@ TEST_F(TxTest, write_zpp_busy_wait) {
     << "Should continue after no longer busy";
 }
 
-TEST_F(TxTest, write_zpp_ACK) {
+TEST_F(TxTest, write_zpp_ack) {
   std::span<uint8_t const> mock_vals{&mock_val, 1u};
 
   InSequence seq;

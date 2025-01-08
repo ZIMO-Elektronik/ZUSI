@@ -2,7 +2,7 @@
 
 class ZppLoad : public zusi::rx::Base {
   // Receive a byte
-  bool receiveByte(uint8_t* const dest) const final { return true; }
+  std::optional<uint8_t> receiveByte() const final { return 0u; }
 
   // Read a CV at address
   uint8_t readCv(uint32_t addr) const final { return 0u; }

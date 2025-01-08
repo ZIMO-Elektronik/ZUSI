@@ -16,7 +16,7 @@ using ::zusi::resync_byte;
 
 inline constexpr uint32_t mock_addr{0x000000FFu};
 
-TEST_F(TxTest, cv_read_no_ACK_valid) {
+TEST_F(TxTest, cv_read_no_ack_valid) {
   InSequence seq;
   EXPECT_CALL(_mock, transmitBytes(_, Ne(_0_1)));
   EXPECT_CALL(_mock, transmitBytes(ElementsAre(resync_byte), _0_1));
@@ -27,7 +27,7 @@ TEST_F(TxTest, cv_read_no_ACK_valid) {
   ASSERT_FALSE(_mock.readCv(mock_addr)) << "Should abort if not ACK valid";
 }
 
-TEST_F(TxTest, cv_read_NAK) {
+TEST_F(TxTest, cv_read_nak) {
   InSequence seq;
   EXPECT_CALL(_mock, transmitBytes(_, Ne(_0_1)));
   EXPECT_CALL(_mock, transmitBytes(ElementsAre(resync_byte), _0_1));
@@ -74,7 +74,7 @@ TEST_F(TxTest, cv_read_crc8_answer) {
   ASSERT_FALSE(_mock.readCv(mock_addr)) << "Should abort if CRC error occurs";
 }
 
-TEST_F(TxTest, cv_read_ACK) {
+TEST_F(TxTest, cv_read_ack) {
   InSequence seq;
   EXPECT_CALL(
     _mock,

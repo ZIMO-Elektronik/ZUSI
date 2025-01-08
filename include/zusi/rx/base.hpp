@@ -81,10 +81,9 @@ private:
 
   /// Receive byte
   ///
-  /// \param  dest  Pointer to receive to
-  /// \return true  Success
-  /// \return false Failure
-  virtual bool receiveByte(uint8_t* const dest) const = 0;
+  /// \retval uint8_t       Received byte
+  /// \retval std::nullopt  No byte received
+  virtual std::optional<uint8_t> receiveByte() const = 0;
 
   /// Wait for the clock to equal state
   ///
@@ -136,7 +135,7 @@ private:
   size_t _bytes_count{}; ///< Bytecount
   uint32_t _crc{};       ///< CRC8
   State _state{};        ///< State
-  bool _ack{};           ///< Ack/nack state
+  bool _ack{};           ///< Ack/nak
 };
 
 } // namespace zusi::rx

@@ -14,7 +14,7 @@ using ::Mbps::_1_364;
 using ::Mbps::_1_807;
 using ::zusi::resync_byte;
 
-TEST_F(TxTest, features_no_ACK_valid) {
+TEST_F(TxTest, features_no_ack_valid) {
   InSequence seq;
   EXPECT_CALL(_mock, transmitBytes(_, Ne(_0_1)));
   EXPECT_CALL(_mock, transmitBytes(ElementsAre(resync_byte), _0_1));
@@ -25,7 +25,7 @@ TEST_F(TxTest, features_no_ACK_valid) {
   ASSERT_FALSE(_mock.features()) << "Should abort if not ACK valid";
 }
 
-TEST_F(TxTest, features_NAK) {
+TEST_F(TxTest, features_nak) {
   InSequence seq;
   EXPECT_CALL(_mock, transmitBytes(_, Ne(_0_1)));
   EXPECT_CALL(_mock, transmitBytes(ElementsAre(resync_byte), _0_1));
@@ -52,7 +52,7 @@ TEST_F(TxTest, features_busy_wait) {
   ASSERT_TRUE(_mock.features()) << "Should continue after no longer busy";
 }
 
-TEST_F(TxTest, features_ACK) {
+TEST_F(TxTest, features_ack) {
   InSequence seq;
   EXPECT_CALL(_mock, transmitBytes(ElementsAre(0x06u, 0xDDu), _0_286));
   EXPECT_CALL(_mock, transmitBytes(ElementsAre(resync_byte), _0_1));

@@ -17,7 +17,7 @@ using ::zusi::resync_byte;
 inline constexpr uint32_t mock_addr{0x000000FFu};
 inline constexpr uint8_t mock_val{0x0F};
 
-TEST_F(TxTest, cv_write_no_ACK_valid) {
+TEST_F(TxTest, cv_write_no_ack_valid) {
   InSequence seq;
   EXPECT_CALL(_mock, transmitBytes(_, Ne(_0_1)));
   EXPECT_CALL(_mock, transmitBytes(ElementsAre(resync_byte), _0_1));
@@ -29,7 +29,7 @@ TEST_F(TxTest, cv_write_no_ACK_valid) {
     << "Should abort if not ACK valid";
 }
 
-TEST_F(TxTest, cv_write_NAK) {
+TEST_F(TxTest, cv_write_nak) {
   InSequence seq;
   EXPECT_CALL(_mock, transmitBytes(_, Ne(_0_1)));
   EXPECT_CALL(_mock, transmitBytes(ElementsAre(resync_byte), _0_1));
@@ -56,7 +56,7 @@ TEST_F(TxTest, cv_write_busy_wait) {
     << "Should continue after no longer busy";
 }
 
-TEST_F(TxTest, cv_write_ACK) {
+TEST_F(TxTest, cv_write_ack) {
   InSequence seq;
   EXPECT_CALL(
     _mock,
