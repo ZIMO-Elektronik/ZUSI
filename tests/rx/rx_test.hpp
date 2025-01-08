@@ -1,5 +1,6 @@
 #pragma once
 
+#include <gtest/gtest.h>
 #include "rx_mock.hpp"
 
 using namespace ::testing;

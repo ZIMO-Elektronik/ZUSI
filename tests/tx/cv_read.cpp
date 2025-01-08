@@ -1,6 +1,4 @@
-#include <gtest/gtest.h>
-#include <zusi/zusi.hpp>
-#include "tx_mock.hpp"
+#include "tx_test.hpp"
 
 using ::testing::_;
 using ::testing::ElementsAre;
@@ -18,89 +16,80 @@ using ::zusi::resync_byte;
 
 inline constexpr uint32_t mock_addr{0x000000FFu};
 
-TEST(cvread, no_ACK_valid) {
-  TxMock zusi{};
-  {
-    InSequence seq;
-    EXPECT_CALL(zusi, transmitBytes(_, Ne(_0_1)));
-    EXPECT_CALL(zusi, transmitBytes(ElementsAre(resync_byte), _0_1));
-    EXPECT_CALL(zusi, gpioInput());
-    EXPECT_CALL(zusi, readData()).WillOnce(Return(true)); // not ACK valid
-    EXPECT_CALL(zusi, spiMaster());
-  }
-  ASSERT_FALSE(zusi.readCv(mock_addr)) << "Should abort if not ACK valid";
+TEST_F(TxTest, cv_read_no_ACK_valid) {
+  InSequence seq;
+  EXPECT_CALL(_mock, transmitBytes(_, Ne(_0_1)));
+  EXPECT_CALL(_mock, transmitBytes(ElementsAre(resync_byte), _0_1));
+  EXPECT_CALL(_mock, gpioInput());
+  EXPECT_CALL(_mock, readData()).WillOnce(Return(true)); // not ACK valid
+  EXPECT_CALL(_mock, spiMaster());
+
+  ASSERT_FALSE(_mock.readCv(mock_addr)) << "Should abort if not ACK valid";
 }
 
-TEST(cvread, NAK) {
-  NiceMock<TxMock> zusi{};
-  {
-    InSequence seq;
-    EXPECT_CALL(zusi, transmitBytes(_, Ne(_0_1)));
-    EXPECT_CALL(zusi, transmitBytes(ElementsAre(resync_byte), _0_1));
-    EXPECT_CALL(zusi, gpioInput());
-    EXPECT_CALL(zusi, readData()); // ACK valid
-    EXPECT_CALL(zusi, readData()); // NAK
-    EXPECT_CALL(zusi, spiMaster());
-  }
-  ASSERT_FALSE(zusi.readCv(mock_addr)) << "Should abort after NAK";
+TEST_F(TxTest, cv_read_NAK) {
+  InSequence seq;
+  EXPECT_CALL(_mock, transmitBytes(_, Ne(_0_1)));
+  EXPECT_CALL(_mock, transmitBytes(ElementsAre(resync_byte), _0_1));
+  EXPECT_CALL(_mock, gpioInput());
+  EXPECT_CALL(_mock, readData()); // ACK valid
+  EXPECT_CALL(_mock, readData()); // NAK
+  EXPECT_CALL(_mock, spiMaster());
+
+  ASSERT_FALSE(_mock.readCv(mock_addr)) << "Should abort after NAK";
 }
 
-TEST(cvread, busy_wait) {
-  NiceMock<TxMock> zusi{};
-  {
-    InSequence seq;
-    EXPECT_CALL(zusi, transmitBytes(_, Ne(_0_1)));
-    EXPECT_CALL(zusi, transmitBytes(ElementsAre(resync_byte), _0_1));
-    EXPECT_CALL(zusi, gpioInput());
-    EXPECT_CALL(zusi, readData());                        // ACK valid
-    EXPECT_CALL(zusi, readData()).WillOnce(Return(true)); // ACK
-    EXPECT_CALL(zusi, readData()).Times(5);               // Busy
-    EXPECT_CALL(zusi, readData()).WillOnce(Return(true)); // Busy End
-    EXPECT_CALL(zusi, readData()).Times(8);               // Receive data
-    EXPECT_CALL(zusi, readData()).Times(8);               // Receive crc8
-    EXPECT_CALL(zusi, spiMaster());
-  }
-  ASSERT_TRUE(zusi.readCv(mock_addr)) << "Should continue after no longer busy";
+TEST_F(TxTest, cv_read_busy_wait) {
+  InSequence seq;
+  EXPECT_CALL(_mock, transmitBytes(_, Ne(_0_1)));
+  EXPECT_CALL(_mock, transmitBytes(ElementsAre(resync_byte), _0_1));
+  EXPECT_CALL(_mock, gpioInput());
+  EXPECT_CALL(_mock, readData());                        // ACK valid
+  EXPECT_CALL(_mock, readData()).WillOnce(Return(true)); // ACK
+  EXPECT_CALL(_mock, readData()).Times(5);               // Busy
+  EXPECT_CALL(_mock, readData()).WillOnce(Return(true)); // Busy End
+  EXPECT_CALL(_mock, readData()).Times(8);               // Receive data
+  EXPECT_CALL(_mock, readData()).Times(8);               // Receive crc8
+  EXPECT_CALL(_mock, spiMaster());
+
+  ASSERT_TRUE(_mock.readCv(mock_addr))
+    << "Should continue after no longer busy";
 }
 
-TEST(cvread, crc8_answer) {
-  NiceMock<TxMock> zusi{};
-  {
-    InSequence seq;
-    EXPECT_CALL(zusi, transmitBytes(_, Ne(_0_1)));
-    EXPECT_CALL(zusi, transmitBytes(ElementsAre(resync_byte), _0_1));
-    EXPECT_CALL(zusi, gpioInput());
-    EXPECT_CALL(zusi, readData());                        // ACK valid
-    EXPECT_CALL(zusi, readData()).WillOnce(Return(true)); // ACK
-    EXPECT_CALL(zusi, readData()).WillOnce(Return(true)); // Busy
-    EXPECT_CALL(zusi, readData())                         //
-      .Times(4)                                           //
-      .WillRepeatedly(Return(true));                      // Receive 4 bits 1
-    EXPECT_CALL(zusi, readData()).Times(4);               // Receive 4 bits 0
-    EXPECT_CALL(zusi, readData()).Times(8);               // Receive crc8
-    EXPECT_CALL(zusi, spiMaster());
-  }
-  ASSERT_FALSE(zusi.readCv(mock_addr)) << "Should abort if CRC error occurs";
+TEST_F(TxTest, cv_read_crc8_answer) {
+  InSequence seq;
+  EXPECT_CALL(_mock, transmitBytes(_, Ne(_0_1)));
+  EXPECT_CALL(_mock, transmitBytes(ElementsAre(resync_byte), _0_1));
+  EXPECT_CALL(_mock, gpioInput());
+  EXPECT_CALL(_mock, readData());                        // ACK valid
+  EXPECT_CALL(_mock, readData()).WillOnce(Return(true)); // ACK
+  EXPECT_CALL(_mock, readData()).WillOnce(Return(true)); // Busy
+  EXPECT_CALL(_mock, readData())                         //
+    .Times(4)                                            //
+    .WillRepeatedly(Return(true));                       // Receive 4 bits 1
+  EXPECT_CALL(_mock, readData()).Times(4);               // Receive 4 bits 0
+  EXPECT_CALL(_mock, readData()).Times(8);               // Receive crc8
+  EXPECT_CALL(_mock, spiMaster());
+
+  ASSERT_FALSE(_mock.readCv(mock_addr)) << "Should abort if CRC error occurs";
 }
 
-TEST(cvread, ACK) {
-  NiceMock<TxMock> zusi{};
-  {
-    InSequence seq;
-    EXPECT_CALL(zusi,
-                transmitBytes(
-                  ElementsAre(0x01u, 0x00u, 0x00u, 0x00u, 0x00u, 0xFFu, 0x02u),
+TEST_F(TxTest, cv_read_ACK) {
+  InSequence seq;
+  EXPECT_CALL(
+    _mock,
+    transmitBytes(ElementsAre(0x01u, 0x00u, 0x00u, 0x00u, 0x00u, 0xFFu, 0x02u),
                   Ne(_0_1)));
-    EXPECT_CALL(zusi, transmitBytes(ElementsAre(resync_byte), _0_1));
-    EXPECT_CALL(zusi, gpioInput());
-    EXPECT_CALL(zusi, readData());                        // ACK valid
-    EXPECT_CALL(zusi, readData()).WillOnce(Return(true)); // ACK
-    EXPECT_CALL(zusi, readData()).WillOnce(Return(true)); // Busy
-    EXPECT_CALL(zusi, readData()).Times(8);               // Receive data
-    EXPECT_CALL(zusi, readData()).Times(8);               // CRC8
-    EXPECT_CALL(zusi, spiMaster());
-  }
-  auto tmp{zusi.readCv(mock_addr)};
+  EXPECT_CALL(_mock, transmitBytes(ElementsAre(resync_byte), _0_1));
+  EXPECT_CALL(_mock, gpioInput());
+  EXPECT_CALL(_mock, readData());                        // ACK valid
+  EXPECT_CALL(_mock, readData()).WillOnce(Return(true)); // ACK
+  EXPECT_CALL(_mock, readData()).WillOnce(Return(true)); // Busy
+  EXPECT_CALL(_mock, readData()).Times(8);               // Receive data
+  EXPECT_CALL(_mock, readData()).Times(8);               // CRC8
+  EXPECT_CALL(_mock, spiMaster());
+
+  auto tmp{_mock.readCv(mock_addr)};
   ASSERT_TRUE(tmp) << "Should return CV value if command is correct";
   ASSERT_EQ(*tmp, 0x00)
     << "Should return data the decoder sent (see Receive data)";

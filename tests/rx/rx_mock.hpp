@@ -1,7 +1,6 @@
 #pragma once
 
 #include <gmock/gmock.h>
-#include <gtest/gtest.h>
 #include <zusi/zusi.hpp>
 
 class RxMock : public zusi::rx::Base {
