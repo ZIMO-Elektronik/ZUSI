@@ -10,10 +10,9 @@
 
 #pragma once
 
-#include <array>
 #include <climits>
+#include <cstddef>
 #include <utility>
-#include "../buffer.hpp"
 #include "../command.hpp"
 #include "../crc8.hpp"
 #include "../features.hpp"
@@ -125,17 +124,14 @@ private:
 
   State execute(Command cmd);
   State reset();
-  bool receiveBytes(std::span<uint8_t> dest);
+  bool receiveBytes(size_t count);
   bool transmitByte(uint8_t byte) const;
   bool ackOrNack();
 
-  /// Receive/transmit buffer
-  Buffer<> _buf{};
-
-  size_t _bytes_count{}; ///< Bytecount
-  uint8_t _crc{};        ///< CRC8
-  State _state{};        ///< State
-  bool _ack{};           ///< Ack/nak
+  Packet _packet{}; ///< Receive/transmit
+  uint8_t _crc{};   ///< CRC8
+  State _state{};   ///< State
+  bool _ack{};      ///< Ack/nak
 };
 
 } // namespace zusi::rx

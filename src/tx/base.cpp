@@ -12,27 +12,9 @@
 #include <climits>
 #include <gsl/util>
 #include <ulf/susiv2.hpp>
-#include "buffer.hpp"
 #include "zusi.hpp"
 
 namespace zusi::tx {
-
-namespace {
-
-/// uint32_t to data
-///
-/// \param  word  Word to convert
-/// \param  data  Pointer to write to
-/// \return Pointer after last element
-constexpr auto uint32_2data(uint32_t word, uint8_t* data) {
-  *data++ = static_cast<uint8_t>((word & 0xFF00'0000u) >> 24u);
-  *data++ = static_cast<uint8_t>((word & 0x00FF'0000u) >> 16u);
-  *data++ = static_cast<uint8_t>((word & 0x0000'FF00u) >> 8u);
-  *data++ = static_cast<uint8_t>((word & 0x0000'00FFu) >> 0u);
-  return data;
-}
-
-} // namespace
 
 ///
 void Base::enter() const {
