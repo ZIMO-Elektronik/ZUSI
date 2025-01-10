@@ -9,6 +9,7 @@
 /// \date   21/03/2023
 
 #include <climits>
+#include <gsl/util>
 #include "zusi.hpp"
 
 namespace zusi::rx {
@@ -41,7 +42,7 @@ Base::State Base::receiveCommand() {
 ///
 /// \return State
 Base::State Base::receiveData() {
-  bool success{false};
+  bool success{};
   switch (static_cast<Command>(_buf[0uz])) {
     case Command::CvRead: success = receiveBytes({&_buf[1uz], 6uz}); break;
     case Command::CvWrite: [[fallthrough]];
@@ -135,7 +136,7 @@ Base::State Base::execute(Command cmd) {
       break;
     }
     case Command::Encrypt: {
-      std::span<uint8_t const, 4u> developer_code{&_buf[1uz], 4uz};
+      std::span<uint8_t const, 4uz> developer_code{&_buf[1uz], 4uz};
       _buf[1uz] = loadCodeValid(developer_code);
       _buf[2uz] = crc8(_buf[1uz]);
       _bytes_count = 2uz;
@@ -192,21 +193,20 @@ bool Base::transmitByte(uint8_t byte) const {
 /// \return true  Acknowledge
 /// \return false Not acknowledge
 bool Base::ackOrNack() {
-  bool const crc_ok{!_crc};
-  _crc = 0u;
+  gsl::final_action clear_crc{[this] { _crc = 0u; }};
   switch (static_cast<Command>(_buf[0uz])) {
     // Requires only CRC
     case Command::CvRead: [[fallthrough]];
     case Command::CvWrite: [[fallthrough]];
     case Command::Features: [[fallthrough]];
-    case Command::Encrypt: return crc_ok ? true : false;
+    case Command::Encrypt: return !_crc ? true : false;
     // Requires CRC and address validation by decryption
     case Command::ZppWrite:
-      return crc_ok && addressValid(data2uint32(&_buf[2uz])) ? true : false;
+      return !_crc && addressValid(data2uint32(&_buf[2uz])) ? true : false;
     // Requires CRC and safety bytes
     case Command::ZppErase: [[fallthrough]];
     case Command::Exit:
-      return crc_ok && _buf[1uz] == 0x55u && _buf[2uz] == 0xAAu ? true : false;
+      return !_crc && _buf[1uz] == 0x55u && _buf[2uz] == 0xAAu ? true : false;
     default: break;
   }
   return false;
