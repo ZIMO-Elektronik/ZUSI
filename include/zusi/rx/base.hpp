@@ -133,7 +133,7 @@ private:
   Buffer<> _buf{};
 
   size_t _bytes_count{}; ///< Bytecount
-  uint32_t _crc{};       ///< CRC8
+  uint8_t _crc{};        ///< CRC8
   State _state{};        ///< State
   bool _ack{};           ///< Ack/nak
 };
