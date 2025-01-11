@@ -49,8 +49,8 @@ private:
   ///
   /// \param  addr  Address
   /// \param  bytes Bytes
-  /// \return true  Success
-  /// \return false Error
+  /// \retval true  Success
+  /// \retval false Error
   virtual void writeZpp(uint32_t addr, std::span<uint8_t const> bytes) = 0;
 
   /// Get features
@@ -66,16 +66,16 @@ private:
   /// Check if load code is valid
   ///
   /// \param  developer_code  Developer code
-  /// \return true            Load code is valid
-  /// \return false           Load code is not valid
+  /// \retval true            Load code is valid
+  /// \retval false           Load code is not valid
   virtual bool
   loadCodeValid(std::span<uint8_t const, 4uz> developer_code) const = 0;
 
   /// Check if address is valid
   ///
   /// \param  addr  Address
-  /// \return true  Address valid
-  /// \return false Address not valid
+  /// \retval true  Address valid
+  /// \retval false Address not valid
   virtual bool addressValid(uint32_t addr) const = 0;
 
   /// Receive byte
@@ -87,8 +87,8 @@ private:
   /// Wait for the clock to equal state
   ///
   /// \param  state State
-  /// \return true  Clock equals state
-  /// \return false Timeout occurred
+  /// \retval true  Clock equals state
+  /// \retval false Timeout occurred
   virtual bool waitClock(bool state) const = 0;
 
   /// Set data to state

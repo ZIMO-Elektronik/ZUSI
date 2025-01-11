@@ -162,8 +162,8 @@ Base::State Base::reset() {
 /// Receive bytes
 ///
 /// \param  count Number of bytes to receive
-/// \return true  Success
-/// \return false Failure
+/// \retval true  Success
+/// \retval false Failure
 bool Base::receiveBytes(size_t count) {
   for (auto i{0uz}; i < count; ++i)
     if (auto const byte{receiveByte()}; !byte) return false;
@@ -177,8 +177,8 @@ bool Base::receiveBytes(size_t count) {
 /// Transmit byte
 ///
 /// \param  byte  Byte to send
-/// \return true  Success
-/// \return false Failure
+/// \retval true  Success
+/// \retval false Failure
 bool Base::transmitByte(uint8_t byte) const {
   for (auto i{0uz}; i < CHAR_BIT; ++i) {
     if (!waitClock(true)) return false;
@@ -190,8 +190,8 @@ bool Base::transmitByte(uint8_t byte) const {
 
 /// Decide whether to acknowledge or not acknowledge
 ///
-/// \return true  Acknowledge
-/// \return false Not acknowledge
+/// \retval true  Acknowledge
+/// \retval false Not acknowledge
 bool Base::ackOrNack() {
   gsl::final_action clear_crc{[this] { _crc = 0u; }};
   switch (static_cast<Command>(_packet[0uz])) {

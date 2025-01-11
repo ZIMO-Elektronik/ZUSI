@@ -20,13 +20,12 @@ TEST_F(RxTest, cv_read) {
   EXPECT_CALL(_mock, waitClock(_)).WillRepeatedly(Return(true));
   EXPECT_CALL(_mock, readCv(0u));
   EXPECT_CALL(_mock, writeData(_))
-    .Times(Exactly(1 +        // ack_valid
-                   1 +        // ack
-                   1 +        // busy
-                   1 +        // busy
-                   CHAR_BIT + // CV
-                   CHAR_BIT   // CRC
-                   ));
+    .Times(Exactly(1 +         // ack_valid
+                   1 +         // ack
+                   1 +         // busy
+                   1 +         // busy
+                   CHAR_BIT +  // CV
+                   CHAR_BIT)); // CRC
 
   RunFor(100ms);
 }

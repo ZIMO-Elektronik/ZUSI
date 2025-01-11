@@ -28,8 +28,8 @@ inline constexpr auto resync_timeout_us{20'000u};
 /// Check if byte is entry byte
 ///
 /// \param  byte  Byte to check
-/// \return true  Byte is entry byte
-/// \return false Byte is not entry byte
+/// \retval true  Byte is entry byte
+/// \retval false Byte is not entry byte
 constexpr bool is_entry_byte(uint8_t byte) {
   return byte == 0x55u || byte == 0xAAu;
 }
@@ -37,8 +37,8 @@ constexpr bool is_entry_byte(uint8_t byte) {
 /// Check if command is valid
 ///
 /// \param  cmd   Command
-/// \return true  Command is valid
-/// \return false Command is not valid
+/// \retval true  Command is valid
+/// \retval false Command is not valid
 constexpr bool is_valid_command(uint8_t cmd) {
   return cmd == std::clamp(cmd,
                            std::to_underlying(Command::CvRead),

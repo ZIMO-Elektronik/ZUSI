@@ -208,8 +208,8 @@ bool Base::ackValid() const { return !ack(); }
 
 /// Read ack
 ///
-/// \return true  Ack high
-/// \return false Ack low
+/// \retval true  Ack high
+/// \retval false Ack low
 bool Base::ack() const {
   writeClock(true);
   delayUs(10u);
