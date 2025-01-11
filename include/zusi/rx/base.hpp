@@ -10,13 +10,13 @@
 
 #pragma once
 
-#include <array>
 #include <climits>
+#include <cstddef>
 #include <utility>
-#include "../buffer.hpp"
 #include "../command.hpp"
 #include "../crc8.hpp"
 #include "../features.hpp"
+#include "../packet.hpp"
 #include "../utility.hpp"
 
 namespace zusi::rx {
@@ -49,8 +49,8 @@ private:
   ///
   /// \param  addr  Address
   /// \param  bytes Bytes
-  /// \return true  Success
-  /// \return false Error
+  /// \retval true  Success
+  /// \retval false Error
   virtual void writeZpp(uint32_t addr, std::span<uint8_t const> bytes) = 0;
 
   /// Get features
@@ -66,30 +66,29 @@ private:
   /// Check if load code is valid
   ///
   /// \param  developer_code  Developer code
-  /// \return true            Load code is valid
-  /// \return false           Load code is not valid
+  /// \retval true            Load code is valid
+  /// \retval false           Load code is not valid
   virtual bool
   loadCodeValid(std::span<uint8_t const, 4uz> developer_code) const = 0;
 
   /// Check if address is valid
   ///
   /// \param  addr  Address
-  /// \return true  Address valid
-  /// \return false Address not valid
+  /// \retval true  Address valid
+  /// \retval false Address not valid
   virtual bool addressValid(uint32_t addr) const = 0;
 
   /// Receive byte
   ///
-  /// \param  dest  Pointer to receive to
-  /// \return true  Success
-  /// \return false Failure
-  virtual bool receiveByte(uint8_t* const dest) const = 0;
+  /// \retval uint8_t       Received byte
+  /// \retval std::nullopt  No byte received
+  virtual std::optional<uint8_t> receiveByte() const = 0;
 
   /// Wait for the clock to equal state
   ///
   /// \param  state State
-  /// \return true  Clock equals state
-  /// \return false Timeout occured
+  /// \retval true  Clock equals state
+  /// \retval false Timeout occurred
   virtual bool waitClock(bool state) const = 0;
 
   /// Set data to state
@@ -109,7 +108,7 @@ private:
   enum class State : uint8_t {
     ReceiveCommand,
     ReceiveData,
-    ReceiveResynch,
+    ReceiveResync,
     TransmitAck,
     TransmitBusy,
     TransmitData,
@@ -118,24 +117,21 @@ private:
 
   State receiveCommand();
   State receiveData();
-  State receiveResynch();
+  State receiveResync();
   State transmitAck();
   State transmitBusy();
   State transmitData();
 
   State execute(Command cmd);
   State reset();
-  bool receiveBytes(std::span<uint8_t> dest);
+  bool receiveBytes(size_t count);
   bool transmitByte(uint8_t byte) const;
   bool ackOrNack();
 
-  /// Receive/transmit buffer
-  Buffer<> buf_{};
-
-  size_t bytes_count_{};  ///< Bytecount
-  uint32_t crc_{};        ///< CRC8
-  State state_{};         ///< State
-  bool ack_{};            ///< Ack/nack state
+  Packet _packet{}; ///< Receive/transmit
+  uint8_t _crc{};   ///< CRC8
+  State _state{};   ///< State
+  bool _ack{};      ///< Ack/nak
 };
 
-}  // namespace zusi::rx
+} // namespace zusi::rx
