@@ -138,8 +138,8 @@ Base::State Base::execute(Command cmd) {
     }
     case Command::Encrypt: {
       std::span<uint8_t const, 4uz> developer_code{&_packet[1uz], 4uz};
-      _packet[1uz] = loadCodeValid(developer_code);
-      _packet[2uz] = crc8(_packet[1uz]);
+      _packet[0uz] = loadCodeValid(developer_code);
+      _packet[1uz] = crc8(_packet[0uz]);
       _packet.resize(2uz);
       retval = State::TransmitData;
       break;
