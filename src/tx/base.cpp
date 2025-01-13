@@ -11,29 +11,12 @@
 #include <cassert>
 #include <climits>
 #include <gsl/util>
-#include "buffer.hpp"
+#include "utility.hpp"
 #include "zusi.hpp"
 
 namespace zusi::tx {
 
-namespace {
-
-/// uint32_t to data
-///
-/// \param  word  Word to convert
-/// \param  data  Pointer to write to
-/// \return Pointer after last element
-constexpr auto uint32_2data(uint32_t word, uint8_t* data) {
-  *data++ = static_cast<uint8_t>((word & 0xFF00'0000u) >> 24u);
-  *data++ = static_cast<uint8_t>((word & 0x00FF'0000u) >> 16u);
-  *data++ = static_cast<uint8_t>((word & 0x0000'FF00u) >> 8u);
-  *data++ = static_cast<uint8_t>((word & 0x0000'00FFu) >> 0u);
-  return data;
-}
-
-}  // namespace
-
-///
+/// ZUSI connection sequence
 void Base::enter() const {
   gsl::final_action spi_master{[this] { spiMaster(); }};
   gpioOutput();
@@ -47,32 +30,127 @@ void Base::enter() const {
   delayUs(resync_timeout_us);
 }
 
+/// Dispatcher for all supported ZUSI frame types
 ///
+/// \param frame ZUSI frame to compute
+///
+/// \retval `true, std::nullopt´                      Successful transmission,
+///                                                   no data returned
+/// \retval `true, ztl::inplace_vector<uint8_t, 4>´   Successful transmission,
+///                                                   data returned
+/// \retval `false, <IGNORE>´                         Transmission error
+std::pair<bool, std::optional<ztl::inplace_vector<uint8_t, 4>>>
+Base::execute(std::span<uint8_t const> frame) {
+  Command cmd = std::bit_cast<Command>(frame.front());
+  std::pair<bool, std::optional<ztl::inplace_vector<uint8_t, 4>>> ret{
+    false, std::nullopt};
+
+  switch (cmd) {
+    case Command::CvRead: {
+      auto val = this->readCv(data2uint32(&frame[addr_pos]));
+      if (val) ret = std::make_pair(val.has_value(), val.value());
+      else ret = std::make_pair(val.has_value(), std::nullopt);
+      break;
+    }
+    case Command::CvWrite: {
+      ret = std::make_pair(
+        this->writeCv(data2uint32(&frame[addr_pos]), frame[data_pos]),
+        std::nullopt);
+      break;
+    }
+    case Command::ZppErase: {
+      ret = std::make_pair(this->eraseZpp(), std::nullopt);
+      break;
+    }
+    case Command::ZppWrite: {
+      ret = std::make_pair(
+        this->writeZpp(data2uint32(&frame[addr_pos]),
+                       frame.subspan(data_pos, frame[data_cnt_pos] + 1)),
+        std::nullopt);
+      break;
+    }
+    case Command::Features: {
+      auto ans = this->features();
+      if (ans) {
+        ztl::inplace_vector<uint8_t, 4> vec{};
+        std::copy(&ans.value()[0], &ans.value()[3], std::back_inserter(vec));
+        ret = std::make_pair(true, vec);
+      } else {
+        ret = std::make_pair(false, std::nullopt);
+      }
+      break;
+    }
+    case Command::Exit: {
+      ret = std::make_pair(this->exit(frame[exit_flags_pos]), std::nullopt);
+      break;
+    }
+    case Command::None: [[fallthough]];
+    case Command::Encrypt: [[fallthrough]];
+    default: break;
+  }
+  return ret;
+}
+
+/// Transmit readCv command
+///
+/// \param addr CV adress
+///
+/// \retval CV adress     if successful
+/// \retval std::nullopt  Transmission error
 std::optional<uint8_t> Base::readCv(uint32_t addr) const {
   gsl::final_action spi_master{[this] { spiMaster(); }};
-  Buffer<7uz> buf;
+  std::array<uint8_t, 7uz> buf;
+  std::optional<uint8_t> ret = std::nullopt;
   auto it{begin(buf)};
-  *it++ = std::to_underlying(Command::CvRead);  // Command
+  *it++ = std::to_underlying(Command::CvRead); // Command
+  *it++ = 0u;                                  // Count
+  it = uint32_2data(addr, it);                 // Address
+  *it = crc8({cbegin(buf), size(buf) - 1uz});  // CRC8
+  transmitBytes(buf, mbps_);
+  resync();
+  gpioInput();
+  if (!ackValid() || !ack()) return {};
+  busy();
+  ret = receiveByte();
+  if (!(crc8(ret.value()) == receiveByte())) ret = std::nullopt;
+  return ret;
+}
+
+/// Transmit writeCv command
+///
+/// \param addr   CV adress
+/// \param value  new CV value
+///
+/// \retval true  if successful
+/// \retval false Transmission error
+bool Base::writeCv(uint32_t addr, uint8_t value) const {
+  gsl::final_action spi_master{[this] { spiMaster(); }};
+  std::array<uint8_t, 8uz> buf;
+  auto it{begin(buf)};
+  *it++ = std::to_underlying(Command::CvWrite); // Command
   *it++ = 0u;                                   // Count
   it = uint32_2data(addr, it);                  // Address
+  *it++ = value;                                // Value
   *it = crc8({cbegin(buf), size(buf) - 1uz});   // CRC8
   transmitBytes(buf, mbps_);
   resync();
   gpioInput();
   if (!ackValid() || !ack()) return {};
   busy();
-  return receiveByte();
+  return true;
 }
 
+/// Transmit eraseZpp command
 ///
-bool Base::writeCv(uint32_t addr, uint8_t value) const {
+/// \retval true  if successful
+/// \retval false Transmission error
+bool Base::eraseZpp() const {
   gsl::final_action spi_master{[this] { spiMaster(); }};
-  Buffer<8uz> buf;
+  std::array<uint8_t, 4uz> buf;
   auto it{begin(buf)};
-  *it++ = std::to_underlying(Command::CvWrite);  // Command
-  *it++ = 0u;                                    // Count
-  it = uint32_2data(addr, it);                   // Address
-  *it++ = value;                                 // Value
+  *it++ = std::to_underlying(Command::ZppErase); // Command
+  *it++ = 0x55u;                                 // Security byte
+  *it++ = 0xAAu;                                 // Security byte
   *it = crc8({cbegin(buf), size(buf) - 1uz});    // CRC8
   transmitBytes(buf, mbps_);
   resync();
@@ -82,34 +160,23 @@ bool Base::writeCv(uint32_t addr, uint8_t value) const {
   return true;
 }
 
+/// Transmit writeZpp command
 ///
-bool Base::eraseZpp() const {
-  gsl::final_action spi_master{[this] { spiMaster(); }};
-  Buffer<4uz> buf;
-  auto it{begin(buf)};
-  *it++ = std::to_underlying(Command::ZppErase);  // Command
-  *it++ = 0x55u;                                  // Security byte
-  *it++ = 0xAAu;                                  // Security byte
-  *it = crc8({cbegin(buf), size(buf) - 1uz});     // CRC8
-  transmitBytes(buf, mbps_);
-  resync();
-  gpioInput();
-  if (!ackValid() || !ack()) return {};
-  busy();
-  return true;
-}
-
+/// \param addr   Flash adress
+/// \param bytes  Raw flash data
 ///
+/// \retval true if successful
+/// \retval`false Transmission error
 bool Base::writeZpp(uint32_t addr, std::span<uint8_t const> bytes) const {
   assert(size(bytes) <= 256uz);
   gsl::final_action spi_master{[this] { spiMaster(); }};
-  Buffer buf;
+  std::array<uint8_t, ZUSI_MAX_PACKET_SIZE> buf;
   auto it{begin(buf)};
-  *it++ = std::to_underlying(Command::ZppWrite);     // Command
-  *it++ = size(bytes) - 1uz;                         // Count
-  it = uint32_2data(addr, it);                       // Address
-  it = std::copy_n(cbegin(bytes), size(bytes), it);  // Data
-  *it = crc8({begin(buf), 6uz + size(bytes)});       // CRC8
+  *it++ = std::to_underlying(Command::ZppWrite);    // Command
+  *it++ = static_cast<uint8_t>(size(bytes) - 1uz);  // Count
+  it = uint32_2data(addr, it);                      // Address
+  it = std::copy_n(cbegin(bytes), size(bytes), it); // Data
+  *it = crc8({begin(buf), 6uz + size(bytes)});      // CRC8
   transmitBytes({cbegin(buf), 6uz + size(bytes) + 1uz}, mbps_);
   resync();
   gpioInput();
@@ -118,13 +185,16 @@ bool Base::writeZpp(uint32_t addr, std::span<uint8_t const> bytes) const {
   return true;
 }
 
+/// Transmit feature request
 ///
+/// \retval Features      if successful
+/// \retval std::nullopt  Transmission error
 std::optional<Features> Base::features() {
   gsl::final_action spi_master{[this] { spiMaster(); }};
-  Buffer<2uz> buf;
+  std::array<uint8_t, 2uz> buf;
   auto it{begin(buf)};
-  *it++ = std::to_underlying(Command::Features);  // Command
-  *it = crc8({cbegin(buf), size(buf) - 1uz});     // CRC8
+  *it++ = std::to_underlying(Command::Features); // Command
+  *it = crc8({cbegin(buf), size(buf) - 1uz});    // CRC8
   transmitBytes(buf, mbps_);
   resync();
   gpioInput();
@@ -138,16 +208,21 @@ std::optional<Features> Base::features() {
   return features;
 }
 
+/// Transmit exit command
 ///
+/// \param flags Exit flags
+///
+/// \retval true if successful
+/// \retval false Transmission error
 bool Base::exit(uint8_t flags) const {
   gsl::final_action spi_master{[this] { spiMaster(); }};
-  Buffer<5uz> buf;
+  std::array<uint8_t, 5uz> buf;
   auto it{begin(buf)};
-  *it++ = std::to_underlying(Command::Exit);   // Command
-  *it++ = 0x55u;                               // Security byte
-  *it++ = 0xAAu;                               // Security byte
-  *it++ = flags;                               // Flags
-  *it = crc8({cbegin(buf), size(buf) - 1uz});  // CRC8
+  *it++ = std::to_underlying(Command::Exit);  // Command
+  *it++ = 0x55u;                              // Security byte
+  *it++ = 0xAAu;                              // Security byte
+  *it++ = flags;                              // Flags
+  *it = crc8({cbegin(buf), size(buf) - 1uz}); // CRC8
   transmitBytes(buf, mbps_);
   resync();
   gpioInput();
@@ -156,19 +231,22 @@ bool Base::exit(uint8_t flags) const {
   return true;
 }
 
-///
+/// Resync phase sequence
 void Base::resync() const {
   delayUs(10u);
   transmitBytes({&resync_byte, 1uz}, Mbps::_0_1);
 }
 
+/// Checks if any decoder is still connected
 ///
+/// \retval false connection valid
+/// \retval true  connection lost
 bool Base::ackValid() const { return !ack(); }
 
 /// Read ack
 ///
-/// \return true  Ack high
-/// \return false Ack low
+/// \retval true  Ack high
+/// \retval false Ack low
 bool Base::ack() const {
   writeClock(true);
   delayUs(10u);
@@ -178,16 +256,18 @@ bool Base::ack() const {
   return retval;
 }
 
-///
+/// Busy phase sequence
 void Base::busy() const {
   writeClock(true);
   delayUs(10u);
   writeClock(false);
   delayUs(20u);
-  while (!readData());  // TODO timeout?
+  while (!readData()); // TODO timeout?
 }
 
+/// Receive data phase sequence
 ///
+/// \retval DATA decoder data received
 uint8_t Base::receiveByte() const {
   uint8_t byte{};
   for (auto i{0uz}; i < CHAR_BIT; ++i) {
@@ -200,4 +280,4 @@ uint8_t Base::receiveByte() const {
   return byte;
 }
 
-}  // namespace zusi::tx
+} // namespace zusi::tx

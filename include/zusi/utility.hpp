@@ -14,22 +14,32 @@
 #include <cstdint>
 #include <utility>
 
+#include "command.hpp"
+
 namespace zusi {
+
+// Byte positions in ZUSI frame
+inline constexpr size_t cmd_pos{0uz};
+inline constexpr size_t data_cnt_pos{1uz};
+inline constexpr size_t addr_pos{2uz};
+inline constexpr size_t data_pos{6uz};
+inline constexpr size_t sec_bytes_pos{1uz};
+inline constexpr size_t exit_flags_pos{3uz};
 
 /// Resync byte
 inline constexpr uint8_t resync_byte{0x80u};
 
 /// Resync timeout in ms
-inline constexpr auto resync_timeout_ms{20u};
+inline constexpr auto resync_timeout_ms{10u};
 
 /// Resync timeout in us
-inline constexpr auto resync_timeout_us{20'000u};
+inline constexpr auto resync_timeout_us{resync_timeout_ms * 1000u};
 
 /// Check if byte is entry byte
 ///
 /// \param  byte  Byte to check
-/// \return true  Byte is entry byte
-/// \return false Byte is not entry byte
+/// \retval true  Byte is entry byte
+/// \retval false Byte is not entry byte
 constexpr bool is_entry_byte(uint8_t byte) {
   return byte == 0x55u || byte == 0xAAu;
 }
@@ -37,8 +47,8 @@ constexpr bool is_entry_byte(uint8_t byte) {
 /// Check if command is valid
 ///
 /// \param  cmd   Command
-/// \return true  Command is valid
-/// \return false Command is not valid
+/// \retval true  Command is valid
+/// \retval false Command is not valid
 constexpr bool is_valid_command(uint8_t cmd) {
   return cmd == std::clamp(cmd,
                            std::to_underlying(Command::CvRead),
@@ -54,4 +64,17 @@ constexpr auto data2uint32(uint8_t const* data) {
                                data[2uz] << 8u | data[3uz] << 0u);
 }
 
-}  // namespace zusi
+/// uint32_t to data
+///
+/// \param  word  Word to convert
+/// \param  data  Pointer to write to
+/// \return Pointer after last element
+constexpr auto uint32_2data(uint32_t word, uint8_t* data) {
+  *data++ = static_cast<uint8_t>((word & 0xFF00'0000u) >> 24u);
+  *data++ = static_cast<uint8_t>((word & 0x00FF'0000u) >> 16u);
+  *data++ = static_cast<uint8_t>((word & 0x0000'FF00u) >> 8u);
+  *data++ = static_cast<uint8_t>((word & 0x0000'00FFu) >> 0u);
+  return data;
+}
+
+} // namespace zusi
