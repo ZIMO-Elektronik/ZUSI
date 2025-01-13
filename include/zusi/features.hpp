@@ -18,4 +18,4 @@ namespace zusi {
 /// Feature bytes used by Command::Features
 using Features = std::array<uint8_t, 4uz>;
 
-}  // namespace zusi
+} // namespace zusi

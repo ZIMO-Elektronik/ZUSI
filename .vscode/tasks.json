@@ -2,10 +2,22 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "Build ZUSITests",
+      "type": "shell",
+      "isBackground": true,
+      "command": "cmake --build build --parallel --target ZUSITests"
+    },
+    {
+      "label": "Run PlantUML",
+      "type": "shell",
+      "isBackground": true,
+      "command": "plantuml -o ./images ./data/transmission.pu"
+    },
+    {
       "label": "Run ZUSITests",
       "type": "shell",
       "isBackground": true,
       "command": "./build/tests/ZUSITests"
-    }
+    },
   ]
 }
