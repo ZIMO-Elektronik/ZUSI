@@ -4,94 +4,337 @@ mode compact
 scale 300 as 50 pixels
 hide time-axis
 
-binary "Track" as T
-T is 50 pixels height
+binary "CLK" as CLK
+CLK is 50 pixels height
 
 concise " " as RX
 
-binary "Ack" as ACK
-ACK is 50 pixels height
+binary "MOSI" as MOSI
+MOSI is 50 pixels height
 
 concise " " as TX
 
-@T
-0 is high
-+75 is low
-+75 is high
-+75 is low
-+75 is high
-+75 is low
-+75 is high
-+75 is low
-+75 is high
-+75 is low
-+75 is high
-+75 is low
-+75 is high
-+75 is low
-+75 is high
-+150 is low
-+75 is high
-+75 is low
-+75 is high
-+75 is low
-+75 is high
-+75 is low
-+75 is high
-+75 is low
-+150 is high
-+75 is low
-+75 is high
-+150 is low
-+150 is high
-+75 is low
-+75 is high
-+75 is low
-+75 is high
-+75 is low
-+225 is high
-+225 is low
-+225 is high
-+225 is low
-+225 is high
-+225 is low
-+225 is high
-+225 is low
-+225 is high
-+225 is low
+@CLK
+' Clock idle is low
+0 is low
+
+' Data idle can be whatever
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
+
+595 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
+
+1155 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
+
+1715 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
+
+2275 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
+
+2835 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
+
+3395 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
+
+' Small delay prior to resync
+3955 is low
++200 is low
+
+' Resync
+4155 is high
++50 is low
++50 is high
++50 is low
++50 is high
++50 is low
++50 is high
++50 is low
++50 is high
++50 is low
++50 is high
++50 is low
++50 is high
++50 is low
++50 is high
++50 is low
+
+' ACK valid
+4955 is high
++100 is low
+
+' ACK
+5255 is high
++100 is low
+
+' Busy
+5555 is high
++100 is low
+
+' CV
+6055 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
+
+' CRC8
+6615 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
++35 is high
++35 is low
 
 @RX
-0 is Preamble
-+1050 is {hidden}
-+150 is "Byte n (0xFF)"
-+600 is {hidden}
-+150 is "Byte n+1 (0xCF)"
-+750 is {hidden}
-+75 is Ackreq
-+2250 is {hidden}
+0 is {hidden}
++35 is "Cmd (0x01)"
+595 is "~#CVs-1 (0x00)"
++560 is "CV address (0x0000'002A)"
++2240 is "CRC8 (0x6A)"
++560 is {hidden}
+4155 is "Resync (0x80)"
++800 is {hidden}
 
-@ACK
+@MOSI
+' Data idle can be whatever
 0 is low
+
+' Command
++35 is high
++35 is high
++35 is low
+
+' CV address
+2835 is low
++35 is low
++35 is high
++35 is high
++35 is low
++35 is low
++35 is high
++35 is high
++35 is low
++35 is low
++35 is high
++35 is high
++35 is low
++35 is low
+
+' CRC8
+3395 is low
++35 is low
++35 is high
++35 is high
++35 is low
++35 is low
++35 is high
++35 is high
++35 is low
++35 is low
++35 is high
++35 is high
++35 is high
++35 is high
++35 is low
++35 is low
+
+' Resync
+4155 is low
 +50 is low
-+3225 is {low,high}
++50 is low
++50 is low
++50 is low
++50 is low
++50 is low
++50 is low
++50 is low
++50 is low
++50 is low
++50 is low
++50 is low
++50 is low
++50 is high
++50 is high
++50 is low
+
+' ACK valid
+4955 is low
 +100 is low
-+125 is {low,high}
+
+' ACK
+5255 is high
++100 is high
+
+' Busy
+5555 is low
 +100 is low
-+125 is {low,high}
-+100 is low
-+225 is low
-+125 is {low,high}
-+100 is low
-+125 is {low,high}
-+100 is low
-+125 is {low,high}
-+100 is low
++400 is high
+
+' CV
+6055 is low
++35 is low
++35 is low
++35 is low
++35 is low
++35 is low
++35 is high
++35 is high
++35 is low
++35 is low
++35 is low
++35 is low
++35 is low
++35 is low
+
+' CRC8
+6615 is low
++35 is low
++35 is high
++35 is high
++35 is low
++35 is low
++35 is low
++35 is low
++35 is low
++35 is low
++35 is low
++35 is low
++35 is high
++35 is high
++35 is high
++35 is high
++35 is low
 
 @TX
-2775 is Reference
-+450 is "Channel 1"
-+675 is {hidden}
-+225 is "Channel 2"
-+675 is {hidden}
+0 is {hidden}
+4955 is ACK0
+5255 is ACK1
+5555 is Busy
+6055 is "CV (0x08)"
+6615 is "CRC8 (0xC2)"
+7175 is {hidden}
 
 @enduml

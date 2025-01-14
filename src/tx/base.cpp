@@ -41,53 +41,46 @@ void Base::enter() const {
 /// \retval `false, <IGNORE>´                         Transmission error
 std::pair<bool, std::optional<ztl::inplace_vector<uint8_t, 4>>>
 Base::execute(std::span<uint8_t const> frame) {
-  Command cmd = std::bit_cast<Command>(frame.front());
   std::pair<bool, std::optional<ztl::inplace_vector<uint8_t, 4>>> ret{
     false, std::nullopt};
 
-  switch (cmd) {
+  switch (std::bit_cast<Command>(frame.front())) {
     case Command::CvRead: {
-      auto val = this->readCv(data2uint32(&frame[addr_pos]));
-      if (val) ret = std::make_pair(val.has_value(), val.value());
+      auto val{readCv(data2uint32(&frame[addr_pos]))};
+      if (val) ret = std::make_pair(val.has_value(), *val);
       else ret = std::make_pair(val.has_value(), std::nullopt);
       break;
     }
-    case Command::CvWrite: {
+    case Command::CvWrite:
       ret = std::make_pair(
-        this->writeCv(data2uint32(&frame[addr_pos]), frame[data_pos]),
+        writeCv(data2uint32(&frame[addr_pos]), frame[data_pos]), std::nullopt);
+      break;
+    case Command::ZppErase:
+      ret = std::make_pair(eraseZpp(), std::nullopt);
+      break;
+    case Command::ZppWrite:
+      ret = std::make_pair(
+        writeZpp(data2uint32(&frame[addr_pos]),
+                 frame.subspan(data_pos, frame[data_cnt_pos] + 1)),
         std::nullopt);
       break;
-    }
-    case Command::ZppErase: {
-      ret = std::make_pair(this->eraseZpp(), std::nullopt);
-      break;
-    }
-    case Command::ZppWrite: {
-      ret = std::make_pair(
-        this->writeZpp(data2uint32(&frame[addr_pos]),
-                       frame.subspan(data_pos, frame[data_cnt_pos] + 1)),
-        std::nullopt);
-      break;
-    }
     case Command::Features: {
-      auto ans = this->features();
+      auto ans{features()};
       if (ans) {
         ztl::inplace_vector<uint8_t, 4> vec{};
         std::copy(&ans.value()[0], &ans.value()[3], std::back_inserter(vec));
         ret = std::make_pair(true, vec);
-      } else {
-        ret = std::make_pair(false, std::nullopt);
-      }
+      } else ret = std::make_pair(false, std::nullopt);
       break;
     }
-    case Command::Exit: {
-      ret = std::make_pair(this->exit(frame[exit_flags_pos]), std::nullopt);
+    case Command::Exit:
+      ret = std::make_pair(exit(frame[exit_flags_pos]), std::nullopt);
       break;
-    }
-    case Command::None: [[fallthough]];
+    case Command::None: [[fallthrough]];
     case Command::Encrypt: [[fallthrough]];
     default: break;
   }
+
   return ret;
 }
 

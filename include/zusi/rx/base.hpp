@@ -96,14 +96,14 @@ private:
   /// \param  state State
   virtual void writeData(bool state) const = 0;
 
-  /// Toggle front- and backlight
-  virtual void toggleLights() const {}
-
   /// Switch to SPI
   virtual void spi() const = 0;
 
   /// Switch to GPIO
   virtual void gpio() const = 0;
+
+  /// Toggle front- and rear lights
+  virtual void toggleLights() const {}
 
   enum class State : uint8_t {
     ReceiveCommand,

@@ -13,7 +13,6 @@
 #include <algorithm>
 #include <cstdint>
 #include <utility>
-
 #include "command.hpp"
 
 namespace zusi {

@@ -18,9 +18,8 @@ ZUSI is a ZIMO specific protocol for the [SUSI](https://normen.railcommunity.de/
     <li><a href="#protocol">Protocol</a></li>
       <ul>
         <li><a href="#electrical-specification">Electrical Specification</a></li>
-        <li><a href="#peripheral-configuration">Peripheral Configuration</a></li>
-        <li><a href="#establishing-a-connection">Establishing a Connection</a></li>
-        <li><a href="#general-data-transfer">General Data Transfer</a></li>
+        <li><a href="#entry">Entry</a></li>
+        <li><a href="#transmission">Transmission</a></li>
         <li><a href="#commands">Commands</a></li>
       </ul>
     <li><a href="#getting-started">Getting Started</a></li>
@@ -35,12 +34,9 @@ ZUSI is a ZIMO specific protocol for the [SUSI](https://normen.railcommunity.de/
 
 ## Protocol
 ### Electrical Specification
-The ZUSI uses a combination of peripheral functions. Standard SPI (Mode1) is used for data transmission, GPIO I/O is used for decoder answer and busy phase. 
+Regarding the electrical properties, ZUSI adheres to the specifications of [RCN-600](https://normen.railcommunity.de/RCN-600.pdf), so reference is made to the standard at this point. The data transfer itself uses a combination of [SPI](https://en.wikipedia.org/wiki/Serial_Peripheral_Interface) and GPIO single bit toggles. The SPI interface must be able to use **mode 1 (CPOL 0, CPHA 1)** which means that data is clocked out on a rising clock edge and read on a falling clock edge. Bidirectional SPI (MOSI only) functionality is advantageous but not mandatory. All transmissions take place **LSB first**. The transmission speed is specified by the host; a [feature request](#feature-request) makes it possible to query the maximum speed of all participants on the bus.
 
-### Peripheral Configuration
-For ZUSI to function correctly, the SPI peripheral needs to be configured correctly. For ZUSI, the SPI uses SPIMode 1 (CPOL 0, CPHA 1) and the transmissions will be SPI TX-only. The SPI needs to operate in LSB first mode
-
-Also, the protocol requires the use of four different SPI clock frequencies: 
+Four different clock frequencies are available.
 
 | Clock Period [µs] | Bit Rate [Mbps] | Description                                         |
 | ----------------- | --------------- | --------------------------------------------------- |
@@ -51,17 +47,20 @@ Also, the protocol requires the use of four different SPI clock frequencies:
 
 These timings do not need to be matched precisely, it is acceptable to achieve a slightly slower data-rate.
 
-In addition to the SPI configuration, all used pins on either host or slave need to be connected with pull-up resistors. 
-
-### Establishing a Connection
+### Entry
 To connect devices to the host, the host needs to send 0x55 (or 0xAA) for at least a second with a clock period fixed at 10ms. This is necessary to allow the decoder to evaluate the signal during its normal operation. 
 
-### General Data Transfer
+#### Alternative Entry
+:construction:
+
+### Transmission
 The ZUSI clock is given by the host with variable period (see SPI frequency table). The Protocol allows the connected devices to return an answer in a specified time window (see ZUSI frame tables). In accordance to the SPI mode, data is clocked out on a rising clock edge and read on a falling clock edge. 
 
 The speed of transmission can be increased if the transmission stays stable to maximize data rate, but must be reduced if the transmissions become too fast for the connected devices. 
 
 To simplify finding the correct transmission speed, the FeatureRequest command was implemented to ask the maximum supported transmission speed of the devices. Details can be found in the Feature request frame table.
+
+![transmission](./data/images/transmission.png)
 
 #### Resynchronisation Phase
 To avoid problems with the MX644, a resynchronisation phase was introduced between host transmission and device answer. This consists of a 10µs delay, with a following transmission of 0x80. The clock period for the transmission is 10µs, which results in a frequency of 0.1Mbps (or 12.5kBaud).
@@ -258,14 +257,14 @@ class ZppLoad : public zusi::rx::Base {
   // Set or clear data pin
   void writeData(bool state) const final {}
 
-  // Optional, blink front- and rear lights
-  void toggleLights() const final {}
-
-  /// Switch to SPI
+  // Switch to SPI
   void spi() const final {}
 
-  /// Switch to GPIO
+  // Switch to GPIO
   void gpio() const final {}
+
+  // Optional, blink front- and rear lights
+  void toggleLights() const final {}
 };
 ```
 

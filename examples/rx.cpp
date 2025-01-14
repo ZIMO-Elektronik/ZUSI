@@ -36,14 +36,14 @@ class ZppLoad : public zusi::rx::Base {
   // Set or clear data pin
   void writeData(bool state) const final {}
 
-  // Optional, blink front- and rear lights
-  void toggleLights() const final {}
-
-  /// Switch to SPI
+  // Switch to SPI
   void spi() const final {}
 
-  /// Switch to GPIO
+  // Switch to GPIO
   void gpio() const final {}
+
+  // Optional, blink front- and rear lights
+  void toggleLights() const final {}
 };
 
 int main() {
