@@ -40,8 +40,8 @@ private:
   /// Write CV
   ///
   /// \param  addr  CV address
-  /// \param  value CV value
-  virtual void writeCv(uint32_t addr, uint8_t value) = 0;
+  /// \param  byte  CV value
+  virtual void writeCv(uint32_t addr, uint8_t byte) = 0;
 
   /// Erase ZPP
   virtual void eraseZpp() = 0;

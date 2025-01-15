@@ -8,7 +8,7 @@ class Receiver : public zusi::rx::Base {
   uint8_t readCv(uint32_t addr) const final { return 0u; }
 
   // Write a CV at address
-  void writeCv(uint32_t addr, uint8_t value) final {}
+  void writeCv(uint32_t addr, uint8_t byte) final {}
 
   // Erase ZPP
   void eraseZpp() final {}

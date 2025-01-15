@@ -116,19 +116,20 @@ Base::State Base::transmitData() {
 Base::State Base::execute(Command cmd) {
   State retval{State::ReceiveCommand};
   uint32_t const addr{data2uint32(&_packet[2uz])};
-  size_t const count{_packet[1uz] + 1uz};
   switch (cmd) {
     case Command::CvRead:
-      for (auto i{0uz}; i < count; ++i) _packet[0uz + i] = readCv(addr + i);
-      _packet[count] = crc8({&_packet[0uz], count});
-      _packet.resize(count + 1uz);
+      _packet[0uz] = readCv(addr);
+      _packet[1uz] = crc8(_packet[0uz]);
+      _packet.resize(2uz);
       retval = State::TransmitData;
       break;
-    case Command::CvWrite:
-      for (auto i{0uz}; i < count; ++i) writeCv(addr + i, _packet[6uz + i]);
-      break;
+    case Command::CvWrite: writeCv(addr, _packet[6uz]); break;
     case Command::ZppErase: eraseZpp(); break;
-    case Command::ZppWrite: writeZpp(addr, {&_packet[6uz], count}); break;
+    case Command::ZppWrite: {
+      size_t const count{_packet[1uz] + 1uz};
+      writeZpp(addr, {&_packet[6uz], count});
+      break;
+    }
     case Command::Features: {
       auto const feature_bytes{features()};
       std::copy(cbegin(feature_bytes), cend(feature_bytes), begin(_packet));

@@ -30,28 +30,28 @@ void Base::enter() const {
   delayUs(resync_timeout_us);
 }
 
-/// Dispatcher for all supported frames
+/// Generic execute
 ///
-/// \param  frame                             Frame to compute
+/// \param  bytes                             Bytes containing ZUSI packet
 /// \retval ztl::inplace_vector<uint8_t, 4uz> Returned data (can be empty)
 /// \retval std::nullopt                      Error
 std::optional<ztl::inplace_vector<uint8_t, 4uz>>
-Base::execute(std::span<uint8_t const> frame) {
-  switch (std::bit_cast<Command>(frame.front())) {
+Base::execute(std::span<uint8_t const> bytes) {
+  switch (std::bit_cast<Command>(bytes.front())) {
     case Command::CvRead:
-      if (auto const cv{readCv(data2uint32(&frame[addr_pos]))})
+      if (auto const cv{readCv(data2uint32(&bytes[addr_pos]))})
         return ztl::inplace_vector<uint8_t, 4uz>{*cv};
       break;
     case Command::CvWrite:
-      if (writeCv(data2uint32(&frame[addr_pos]), frame[data_pos]))
+      if (writeCv(data2uint32(&bytes[addr_pos]), bytes[data_pos]))
         return ztl::inplace_vector<uint8_t, 4uz>{};
       break;
     case Command::ZppErase:
       if (eraseZpp()) return ztl::inplace_vector<uint8_t, 4uz>{};
       break;
     case Command::ZppWrite:
-      if (writeZpp(data2uint32(&frame[addr_pos]),
-                   frame.subspan(data_pos, frame[data_cnt_pos] + 1uz)))
+      if (writeZpp(data2uint32(&bytes[addr_pos]),
+                   bytes.subspan(data_pos, bytes[data_cnt_pos] + 1uz)))
         return ztl::inplace_vector<uint8_t, 4uz>{};
       break;
     case Command::Features:
@@ -60,11 +60,11 @@ Base::execute(std::span<uint8_t const> frame) {
           (*feats)[0uz], (*feats)[1uz], (*feats)[2uz], (*feats)[3uz]};
       break;
     case Command::Exit:
-      if (exit(frame[exit_flags_pos]))
+      if (exit(bytes[exit_flags_pos]))
         return ztl::inplace_vector<uint8_t, 4uz>{};
       break;
     case Command::ZppLcDcQuery: {
-      if (auto const valid{lcDcQuery(frame.subspan<1uz, 4uz>())})
+      if (auto const valid{lcDcQuery(bytes.subspan<1uz, 4uz>())})
         return ztl::inplace_vector<uint8_t, 4uz>{*valid};
       break;
     }
@@ -76,7 +76,6 @@ Base::execute(std::span<uint8_t const> frame) {
 /// Read CV
 ///
 /// \param  addr          CV address
-/// \retval uint8_t       CV value
 /// \retval std::nullopt  Error
 std::optional<uint8_t> Base::readCv(uint32_t addr) const {
   gsl::final_action spi_master{[this] { spiMaster(); }};
@@ -99,17 +98,17 @@ std::optional<uint8_t> Base::readCv(uint32_t addr) const {
 /// Write CV
 ///
 /// \param  addr  CV address
-/// \param  value CV value
+/// \param  byte  CV value
 /// \retval true  Success
 /// \retval false Error
-bool Base::writeCv(uint32_t addr, uint8_t value) const {
+bool Base::writeCv(uint32_t addr, uint8_t byte) const {
   gsl::final_action spi_master{[this] { spiMaster(); }};
   std::array<uint8_t, 8uz> buf;
   auto it{begin(buf)};
   *it++ = std::to_underlying(Command::CvWrite); // Command
   *it++ = 0u;                                   // Count
   it = uint32_2data(addr, it);                  // Address
-  *it++ = value;                                // Value
+  *it++ = byte;                                 // Value
   *it = crc8({cbegin(buf), size(buf) - 1uz});   // CRC8
   transmitBytes(buf, _mbps);
   resync();

@@ -27,24 +27,27 @@ public:
   /// Transmit entry sequence
   void enter() const;
 
+  /// Generic execute
   ///
+  /// \param  bytes                             Bytes containing ZUSI packet
+  /// \retval ztl::inplace_vector<uint8_t, 4uz> Returned data (can be empty)
+  /// \retval std::nullopt                      Error
   std::optional<ztl::inplace_vector<uint8_t, 4uz>>
   execute(std::span<uint8_t const> data);
 
   /// Read CV
   ///
   /// \param  addr          CV address
-  /// \retval uint8_t       CV value
   /// \retval std::nullopt  Error
   std::optional<uint8_t> readCv(uint32_t addr) const;
 
   /// Write CV
   ///
   /// \param  addr  CV address
-  /// \param  value CV value
+  /// \param  byte  CV value
   /// \retval true  Success
   /// \retval false Error
-  bool writeCv(uint32_t addr, uint8_t value) const;
+  bool writeCv(uint32_t addr, uint8_t byte) const;
 
   /// Erase ZPP
   ///

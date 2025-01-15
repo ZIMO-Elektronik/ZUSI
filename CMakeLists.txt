@@ -15,7 +15,7 @@ project(
   LANGUAGES CXX)
 
 set(ZUSI_MAX_PACKET_SIZE
-    264u
+    263u
     CACHE STRING "Maximum size of a packet in bytes")
 
 file(GLOB_RECURSE SRC src/*.cpp)

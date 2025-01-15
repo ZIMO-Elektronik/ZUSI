@@ -257,7 +257,7 @@ ZPP Write is used to transfer ZPP data.
 Features requests the transmission capabilities of connected devices. Feature bits (see baud rate and devices) will be pulled to 0 when at least one decoder does not support the corresponding feature.
 
 > [!WARNING]  
-> Personal note: I think someone mixed up the baud rate flags 0 and 1. As defined, now the fastest decoder determines the transmission speed, not the slowest.
+> Personal note: I think someone mixed up the baud rate flags 0 and 1. As defined, now the fastest decoder determines the transmission speed, not the slowest. In addition, the CRC is missing in the response of this packet... :cry:
 
 #### Exit
 <table>
@@ -411,7 +411,7 @@ class Receiver : public zusi::rx::Base {
   uint8_t readCv(uint32_t addr) const final { return 0u; }
 
   // Write a CV at address
-  void writeCv(uint32_t addr, uint8_t value) final {}
+  void writeCv(uint32_t addr, uint8_t byte) final {}
 
   // Erase ZPP
   void eraseZpp() final {}
