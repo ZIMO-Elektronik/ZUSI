@@ -51,7 +51,7 @@ constexpr bool is_entry_byte(uint8_t byte) {
 constexpr bool is_valid_command(uint8_t cmd) {
   return cmd == std::clamp(cmd,
                            std::to_underlying(Command::CvRead),
-                           std::to_underlying(Command::Encrypt));
+                           std::to_underlying(Command::ZppLcDcQuery));
 }
 
 /// Data to uint32_t

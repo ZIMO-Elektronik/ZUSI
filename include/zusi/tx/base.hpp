@@ -24,54 +24,87 @@ public:
   /// Dtor
   virtual constexpr ~Base() = default;
 
+  /// Transmit entry sequence
   void enter() const;
 
-  std::pair<bool, std::optional<ztl::inplace_vector<uint8_t, 4>>>
+  ///
+  std::optional<ztl::inplace_vector<uint8_t, 4uz>>
   execute(std::span<uint8_t const> data);
 
-  /// \param  index CV index
+  /// Read CV
+  ///
+  /// \param  addr          CV address
+  /// \retval uint8_t       CV value
+  /// \retval std::nullopt  Error
   std::optional<uint8_t> readCv(uint32_t addr) const;
 
+  /// Write CV
+  ///
   /// \param  addr  CV address
   /// \param  value CV value
+  /// \retval true  Success
+  /// \retval false Error
   bool writeCv(uint32_t addr, uint8_t value) const;
 
+  /// Erase ZPP
   ///
+  /// \retval true  Success
+  /// \retval false Error
   bool eraseZpp() const;
 
+  /// Write ZPP
   ///
+  /// \param  addr  Address
+  /// \param  bytes Bytes
+  /// \retval true  Success
+  /// \retval false Error
   bool writeZpp(uint32_t addr, std::span<uint8_t const> bytes) const;
 
+  /// Features query
   ///
+  /// \retval Features      Feature bytes
+  /// \retval std::nullopt  Error
   std::optional<Features> features();
 
-  /// uint8_t flags
+  /// Exit
+  ///
+  /// \param  flags Flags
+  /// \retval true  Success
+  /// \retval false Error
   bool exit(uint8_t flags) const;
 
-private:
+  /// LC-DC query
   ///
+  /// \param  developer_code  Developer code
+  /// \retval bool            Load code valid
+  /// \retval std::nullopt    Error
+  std::optional<bool>
+  lcDcQuery(std::span<uint8_t const, 4uz> developer_code) const;
+
+private:
+  /// Transmit bytes
   virtual void transmitBytes(std::span<uint8_t const> bytes,
                              Mbps mbps) const = 0;
 
-  ///
+  /// Switch to SPI master
   virtual void spiMaster() const = 0;
 
-  ///
+  /// Switch to GPIO input
   virtual void gpioInput() const = 0;
 
-  ///
+  /// Switch to GPIO output
   virtual void gpioOutput() const = 0;
 
-  ///
+  /// Write clock line
   virtual void writeClock(bool state) const = 0;
 
-  ///
+  /// Write data line
   virtual void writeData(bool state) const = 0;
 
-  ///
+  /// Read data line
   virtual bool readData() const = 0;
 
-  ///
+  /// Delay microseconds
   virtual void delayUs(uint32_t us) const = 0;
 
   void resync() const;
@@ -80,7 +113,7 @@ private:
   void busy() const;
   uint8_t receiveByte() const;
 
-  Mbps mbps_{Mbps::_0_286};
+  Mbps _mbps{Mbps::_0_286};
 };
 
 } // namespace zusi::tx

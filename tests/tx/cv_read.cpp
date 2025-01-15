@@ -14,8 +14,6 @@ using ::Mbps::_1_364;
 using ::Mbps::_1_807;
 using ::zusi::resync_byte;
 
-inline constexpr uint32_t mock_addr{0x000000FFu};
-
 TEST_F(TxTest, cv_read_no_ack_valid) {
   InSequence seq;
   EXPECT_CALL(_mock, transmitBytes(_, Ne(_0_1)));
@@ -24,7 +22,7 @@ TEST_F(TxTest, cv_read_no_ack_valid) {
   EXPECT_CALL(_mock, readData()).WillOnce(Return(true)); // not ACK valid
   EXPECT_CALL(_mock, spiMaster());
 
-  ASSERT_FALSE(_mock.readCv(mock_addr)) << "Should abort if not ACK valid";
+  ASSERT_FALSE(_mock.readCv(_addr)) << "Should abort if not ACK valid";
 }
 
 TEST_F(TxTest, cv_read_nak) {
@@ -36,7 +34,7 @@ TEST_F(TxTest, cv_read_nak) {
   EXPECT_CALL(_mock, readData()); // NAK
   EXPECT_CALL(_mock, spiMaster());
 
-  ASSERT_FALSE(_mock.readCv(mock_addr)) << "Should abort after NAK";
+  ASSERT_FALSE(_mock.readCv(_addr)) << "Should abort after NAK";
 }
 
 TEST_F(TxTest, cv_read_busy_wait) {
@@ -52,8 +50,7 @@ TEST_F(TxTest, cv_read_busy_wait) {
   EXPECT_CALL(_mock, readData()).Times(8);               // Receive crc8
   EXPECT_CALL(_mock, spiMaster());
 
-  ASSERT_TRUE(_mock.readCv(mock_addr))
-    << "Should continue after no longer busy";
+  ASSERT_TRUE(_mock.readCv(_addr)) << "Should continue after no longer busy";
 }
 
 TEST_F(TxTest, cv_read_crc8_answer) {
@@ -71,7 +68,7 @@ TEST_F(TxTest, cv_read_crc8_answer) {
   EXPECT_CALL(_mock, readData()).Times(8);               // Receive crc8
   EXPECT_CALL(_mock, spiMaster());
 
-  ASSERT_FALSE(_mock.readCv(mock_addr)) << "Should abort if CRC error occurs";
+  ASSERT_FALSE(_mock.readCv(_addr)) << "Should abort if CRC error occurs";
 }
 
 TEST_F(TxTest, cv_read_ack) {
@@ -89,7 +86,7 @@ TEST_F(TxTest, cv_read_ack) {
   EXPECT_CALL(_mock, readData()).Times(8);               // CRC8
   EXPECT_CALL(_mock, spiMaster());
 
-  auto tmp{_mock.readCv(mock_addr)};
+  auto tmp{_mock.readCv(_addr)};
   ASSERT_TRUE(tmp) << "Should return CV value if command is correct";
   ASSERT_EQ(*tmp, 0x00)
     << "Should return data the decoder sent (see Receive data)";

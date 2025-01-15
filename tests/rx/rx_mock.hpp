@@ -20,6 +20,6 @@ public:
   MOCK_METHOD(bool, waitClock, (bool), (const, override));
   MOCK_METHOD(void, writeData, (bool), (const, override));
   MOCK_METHOD(void, toggleLights, (), (const, override));
-  MOCK_METHOD(void, spi, (), (const, override));
-  MOCK_METHOD(void, gpio, (), (const, override));
+  MOCK_METHOD(void, spiSlave, (), (const, override));
+  MOCK_METHOD(void, gpioOutput, (), (const, override));
 };

@@ -1,6 +1,6 @@
 #include <zusi/zusi.hpp>
 
-class ZppLoad : public zusi::rx::Base {
+class Receiver : public zusi::rx::Base {
   // Receive a byte
   std::optional<uint8_t> receiveByte() const final { return 0u; }
 
@@ -16,11 +16,11 @@ class ZppLoad : public zusi::rx::Base {
   // Write ZPP
   void writeZpp(uint32_t addr, std::span<uint8_t const> bytes) final {}
 
-  // Return value of feature request
+  // Return value of features query
   zusi::Features features() const final { return {}; }
 
   // Exit
-  [[noreturn]] void exit(uint8_t flags) final {}
+  void exit(uint8_t flags) final {}
 
   // Check if the load code is valid
   bool loadCodeValid(std::span<uint8_t const, 4uz> developer_code) const final {
@@ -33,20 +33,50 @@ class ZppLoad : public zusi::rx::Base {
   // Wait till clock pin equals state with a resync timeout
   bool waitClock(bool state) const final { return true; }
 
-  // Set or clear data pin
+  // Write data line
   void writeData(bool state) const final {}
 
-  // Switch to SPI
-  void spi() const final {}
+  // Switch to SPI slave
+  void spiSlave() const final {}
 
-  // Switch to GPIO
-  void gpio() const final {}
+  // Switch to GPIO output
+  void gpioOutput() const final {}
 
   // Optional, blink front- and rear lights
   void toggleLights() const final {}
 };
 
+class Transmitter : public zusi::tx::Base {
+  /// Transmit byte at specific transmission speed
+  void transmitBytes(std::span<uint8_t const> bytes,
+                     zusi::Mbps mbps) const final {}
+
+  // Switch to SPI master
+  void spiMaster() const final {}
+
+  // Switch to GPIO input
+  void gpioInput() const final {}
+
+  // Switch to GPIO output
+  void gpioOutput() const final {}
+
+  // Write clock line
+  void writeClock(bool state) const final {}
+
+  // Write data line
+  void writeData(bool state) const final {}
+
+  // Read data line
+  bool readData() const final { return true; }
+
+  // Delay microseconds
+  void delayUs(uint32_t us) const final {}
+};
+
 int main() {
-  ZppLoad zpp_load{};
-  zpp_load.execute();
+  Receiver rx{};
+  rx.execute();
+
+  Transmitter tx{};
+  // tx.execute();
 }

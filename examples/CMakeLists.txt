@@ -1,8 +1,6 @@
-file(GLOB_RECURSE SRC *.cpp)
-add_executable(ZUSIExamples ${SRC})
-
-sanitize(address,undefined)
-
-target_common_warnings(ZUSIExamples PRIVATE)
-
-target_link_libraries(ZUSIExamples PRIVATE ZUSI::ZUSI)
+if(ESP_PLATFORM)
+  # ESP32 example gets automatically included by component manager
+  # https://docs.espressif.com/projects/idf-component-manager/en/latest/reference/manifest_file.html#examples
+elseif(CMAKE_SYSTEM_NAME STREQUAL CMAKE_HOST_SYSTEM_NAME)
+  add_subdirectory(zpp_load)
+endif()

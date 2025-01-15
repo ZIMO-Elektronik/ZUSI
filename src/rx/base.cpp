@@ -54,7 +54,7 @@ Base::State Base::receiveData() {
     case Command::ZppErase: success = receiveBytes(3uz); break;
     case Command::Features: success = receiveBytes(1uz); break;
     case Command::Exit: success = receiveBytes(4uz); break;
-    case Command::Encrypt: success = receiveBytes(5uz); break;
+    case Command::ZppLcDcQuery: success = receiveBytes(5uz); break;
     default: break;
   }
   return success ? State::ReceiveResync : State::Error;
@@ -67,7 +67,7 @@ Base::State Base::receiveResync() {
   _ack = ackOrNack();
   if (auto const retval{receiveByte()}; !retval) return State::Error;
   else if (*retval == resync_byte) {
-    gpio();
+    gpioOutput();
     return State::TransmitAck;
   } else return State::Error;
 }
@@ -96,7 +96,7 @@ Base::State Base::transmitBusy() {
   auto const retval{execute(static_cast<Command>(_packet[0uz]))};
   if (!waitClock(false)) return State::Error;
   writeData(true);
-  if (retval == State::ReceiveCommand) spi();
+  if (retval == State::ReceiveCommand) spiSlave();
   return retval;
 }
 
@@ -136,7 +136,7 @@ Base::State Base::execute(Command cmd) {
       retval = State::TransmitData;
       break;
     }
-    case Command::Encrypt: {
+    case Command::ZppLcDcQuery: {
       std::span<uint8_t const, 4uz> developer_code{&_packet[1uz], 4uz};
       _packet[0uz] = loadCodeValid(developer_code);
       _packet[1uz] = crc8(_packet[0uz]);
@@ -153,7 +153,7 @@ Base::State Base::execute(Command cmd) {
 ///
 /// \return State
 Base::State Base::reset() {
-  spi();
+  spiSlave();
   _crc = 0u;
   _ack = false;
   return State::ReceiveCommand;
@@ -199,7 +199,7 @@ bool Base::ackOrNack() {
     case Command::CvRead: [[fallthrough]];
     case Command::CvWrite: [[fallthrough]];
     case Command::Features: [[fallthrough]];
-    case Command::Encrypt: return !_crc ? true : false;
+    case Command::ZppLcDcQuery: return !_crc ? true : false;
     // Requires CRC and address validation by decryption
     case Command::ZppWrite:
       return !_crc && addressValid(data2uint32(&_packet[2uz])) ? true : false;

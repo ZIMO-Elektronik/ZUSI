@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0
+- Add LC-DC query to `tx::Base`
+- Simpler return type for `tx::Base::execute`
+- Rename `rx::Base::spi` to `rx::Base::spiSlave`
+- Rename `rx::Base::gpio` to `rx::Base::gpioOutput`
+- Bugfix feature query is always transmitted at the slowest speed ([#7](https://github.com/ZIMO-Elektronik/ZUSI/issues/7))
+
 ## 0.8.0
 - Add generic `tx::Base::execute`
 - Bugfix array index in encrypt command ([#2](https://github.com/ZIMO-Elektronik/ZUSI/issues/2))

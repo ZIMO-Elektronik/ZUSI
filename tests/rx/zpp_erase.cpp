@@ -2,7 +2,7 @@
 
 using namespace std::chrono_literals;
 
-TEST_F(RxTest, erase_zpp) {
+TEST_F(RxTest, zpp_erase) {
   zusi::Packet packet{
     std::to_underlying(zusi::Command::ZppErase), 0x55u, 0xAAu};
 
@@ -13,7 +13,7 @@ TEST_F(RxTest, erase_zpp) {
     .WillOnce(Return(zusi::crc8(packet)))
     .WillOnce(Return(zusi::resync_byte))
     .WillRepeatedly(Return(std::nullopt));
-  EXPECT_CALL(_mock, gpio()).Times(1);
+  EXPECT_CALL(_mock, gpioOutput()).Times(1);
   EXPECT_CALL(_mock, waitClock(_)).WillRepeatedly(Return(true));
   EXPECT_CALL(_mock, eraseZpp());
   EXPECT_CALL(_mock, writeData(_))

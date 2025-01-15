@@ -16,7 +16,7 @@ TEST_F(RxTest, cv_read) {
     .WillOnce(Return(zusi::crc8(packet)))
     .WillOnce(Return(zusi::resync_byte))
     .WillRepeatedly(Return(std::nullopt));
-  EXPECT_CALL(_mock, gpio()).Times(1);
+  EXPECT_CALL(_mock, gpioOutput()).Times(1);
   EXPECT_CALL(_mock, waitClock(_)).WillRepeatedly(Return(true));
   EXPECT_CALL(_mock, readCv(0u));
   EXPECT_CALL(_mock, writeData(_))

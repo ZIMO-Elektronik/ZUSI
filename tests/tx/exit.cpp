@@ -14,8 +14,6 @@ using ::Mbps::_1_364;
 using ::Mbps::_1_807;
 using ::zusi::resync_byte;
 
-constexpr uint8_t mock_flags{0x02};
-
 TEST_F(TxTest, exit_no_ack_valid) {
   InSequence seq;
   EXPECT_CALL(_mock, transmitBytes(_, Ne(_0_1)));
@@ -24,7 +22,7 @@ TEST_F(TxTest, exit_no_ack_valid) {
   EXPECT_CALL(_mock, readData()).WillOnce(Return(true)); // not ACK valid
   EXPECT_CALL(_mock, spiMaster());
 
-  ASSERT_FALSE(_mock.exit(mock_flags)) << "Should abort if not ACK valid";
+  ASSERT_FALSE(_mock.exit(_exit_flags)) << "Should abort if not ACK valid";
 }
 
 TEST_F(TxTest, exit_nak) {
@@ -36,7 +34,7 @@ TEST_F(TxTest, exit_nak) {
   EXPECT_CALL(_mock, readData()); // NAK
   EXPECT_CALL(_mock, spiMaster());
 
-  ASSERT_FALSE(_mock.exit(mock_flags)) << "Should abort after NAK";
+  ASSERT_FALSE(_mock.exit(_exit_flags)) << "Should abort after NAK";
 }
 
 TEST_F(TxTest, exit_busy_wait) {
@@ -50,7 +48,8 @@ TEST_F(TxTest, exit_busy_wait) {
   EXPECT_CALL(_mock, readData()).WillOnce(Return(true)); // Busy End
   EXPECT_CALL(_mock, spiMaster());
 
-  ASSERT_TRUE(_mock.exit(mock_flags)) << "Should continue after no longer busy";
+  ASSERT_TRUE(_mock.exit(_exit_flags))
+    << "Should continue after no longer busy";
 }
 
 TEST_F(TxTest, exit_ack) {
@@ -65,6 +64,6 @@ TEST_F(TxTest, exit_ack) {
   EXPECT_CALL(_mock, readData()).WillOnce(Return(true)); // Busy
   EXPECT_CALL(_mock, spiMaster());
 
-  auto tmp{_mock.exit(mock_flags)};
+  auto tmp{_mock.exit(_exit_flags)};
   ASSERT_TRUE(tmp) << "Should return true if command is correct";
 }

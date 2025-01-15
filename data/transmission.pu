@@ -7,12 +7,12 @@ hide time-axis
 binary "CLK" as CLK
 CLK is 50 pixels height
 
-concise " " as RX
+concise "Host" as RX
 
 binary "MOSI" as MOSI
 MOSI is 50 pixels height
 
-concise " " as TX
+concise "Device" as TX
 
 @CLK
 ' Clock idle is low

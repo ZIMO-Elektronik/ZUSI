@@ -34,7 +34,7 @@ ZUSI is a ZIMO specific protocol for the [SUSI](https://normen.railcommunity.de/
 
 ## Protocol
 ### Electrical Specification
-Regarding the electrical properties, ZUSI adheres to the specifications of [RCN-600](https://normen.railcommunity.de/RCN-600.pdf), so reference is made to the standard at this point. The data transfer itself uses a combination of [SPI](https://en.wikipedia.org/wiki/Serial_Peripheral_Interface) and GPIO single bit toggles. The SPI interface must be able to use **mode 1 (CPOL 0, CPHA 1)** which means that data is clocked out on a rising clock edge and read on a falling clock edge. Bidirectional SPI (MOSI only) functionality is advantageous but not mandatory. All transmissions take place **LSB first**. The transmission speed is specified by the host; a [feature request](#feature-request) makes it possible to query the maximum speed of all participants on the bus.
+Regarding the electrical properties, ZUSI adheres to the specifications of [RCN-600](https://normen.railcommunity.de/RCN-600.pdf), so reference is made to the standard at this point. The data transfer itself uses a combination of [SPI](https://en.wikipedia.org/wiki/Serial_Peripheral_Interface) and GPIO single bit toggles. The SPI interface must be able to use **mode 1 (CPOL 0, CPHA 1)** which means that data is clocked out on a rising clock edge and read on a falling clock edge. Bidirectional SPI (MOSI only) functionality is advantageous but not mandatory. All transmissions take place **LSB first**. The transmission speed is specified by the host; a [feature request](#features) makes it possible to query the maximum speed of all participants on the bus.
 
 Four different clock frequencies are available.
 
@@ -48,169 +48,351 @@ Four different clock frequencies are available.
 These timings do not need to be matched precisely, it is acceptable to achieve a slightly slower data-rate.
 
 ### Entry
-To connect devices to the host, the host needs to send 0x55 (or 0xAA) for at least a second with a clock period fixed at 10ms. This is necessary to allow the decoder to evaluate the signal during its normal operation. 
+To connect devices (decoders) to the host, the host needs to send **0x55** (or **0xAA**) for at least a second with a clock period fixed at 10ms. This is necessary to allow the decoder to evaluate the signal during its normal operation. 
 
 #### Alternative Entry
 :construction:
 
 ### Transmission
-The ZUSI clock is given by the host with variable period (see SPI frequency table). The Protocol allows the connected devices to return an answer in a specified time window (see ZUSI frame tables). In accordance to the SPI mode, data is clocked out on a rising clock edge and read on a falling clock edge. 
+The transmission is generally divided into 5 phases:
+- [Command phase](#command-phase)
+- [Resynchronization Phase](#resynchronization-phase)
+- [ACK Phase](#ack-phase)
+- [Busy Phase](#busy-phase)
+- [Response Phase](#response-phase)
 
-The speed of transmission can be increased if the transmission stays stable to maximize data rate, but must be reduced if the transmissions become too fast for the connected devices. 
-
-To simplify finding the correct transmission speed, the FeatureRequest command was implemented to ask the maximum supported transmission speed of the devices. Details can be found in the Feature request frame table.
-
+The following graphic shows the transmission of a [CV Read](#cv-read) packet including response. After the command has been transmitted, including some data, a resync byte is sent. The direction of the data is then reversed and all connected devices have the opportunity to respond. This response consists of an ACK and Busy phase and, if provided for by the command, the transmission of the requested data.
 ![transmission](./data/images/transmission.png)
 
-#### Resynchronisation Phase
-To avoid problems with the MX644, a resynchronisation phase was introduced between host transmission and device answer. This consists of a 10µs delay, with a following transmission of 0x80. The clock period for the transmission is 10µs, which results in a frequency of 0.1Mbps (or 12.5kBaud).
+#### Command phase
+During the command phase the host transmits a [command](#commands) including any data at the currently set transmission speed.
 
-To catch asynchronous behavior, the state-machine of a decoder will be reset after 10ms of no activity on ZUSI clock. This can be used to resync all decoders. 
+#### Resynchronization Phase
+To avoid problems with the MX644, a resynchronization phase has been introduced between host transmission and device response. This phase consists of a delay of at least 10µs, followed by a transmission of the byte **0x80**. The clock period for the transmission is 10µs, which corresponds to a an SPI frequency of 0.1Mbps.
 
-#### Answer Phase
-After the last bit of the host transmission (after the resynchronisation phase), the host switches the ZUSI data line to input (with pull-up). The decoder will send a two bit answer, one ACK valid and one ACK (in this order). 
+To catch asynchronous behavior, the state-machine of a decoder will be reset after 10ms of no activity on the clock. This can be used to resync all decoders.
 
-ACK valid is low. This verifies that at least one decoder is still connected and received the transmission. If the ACK valid is high, no decoder was able to receive the transmission. (Wired-OR) 
+#### ACK Phase
+After the last bit of the host transmission (after the resynchronization phase), the host switches the data line to input. The decoder will send a two bit answer, one called **ACK valid** and one **ACK** (in this order). 
 
-ACK is high (NAK is low), if all decoders were able to complete the command. If a decoder was unable to complete the command, this will be pulled to low for all connected devices (Wired-AND)
+**ACK valid** should always be low. This verifies that **at least one** decoder is still connected and received the command. If **ACK valid** is high, then the host must assume that no decoder has received the command. (wired OR).
 
-To integrate the MX644, the answer phase is asymmetric. The low period of clock is defined with 20µs, the high period with 10µs. Both ACK valid and ACK/NAK will be set by the decoder on a rising edge on clock and can be read on the falling edge. 
+**ACK** is high if all decoders have confirmed the command. If **ACK** is low (**NAK**), at least one decoder has not acknowledged the command (wired AND).
+
+Again, there is a special workaround for the MX644. The ACK phase uses an asymmetric clock period of 10µs high to 20µs low. Both ACK valid and ACK/NAK will be set by the decoder on a rising edge on clock and can be read on the falling edge.
 
 #### Busy Phase
-Some commands (e.g. DeleteFlash or WriteFlash) have built-in busy to signal the command still being processed on at least one decoder. This is achieved through the decoder pulling the data line to logical low and holding this state. When the decoder is finished, it needs to release the data line again, but only after the clock line is high again (signaling that the answer phase is complete). This results in a "Wired-AND", which will result in a logical high only if all decoders are finished with the command. The host clock is suspended during the busy phase. 
+Some commands (e.g. [ZPP Erase](#zpp-erase) or [ZPP Write](#zpp-write)) contain a busy phase. Similar to the ACK bits, a bit is clocked by the host. The decoder waits for the clock line to be high and then pulls the data line low. While the data line is low, the decoder can execute the received command. When it is finished, it waits for the clock line to be low and then releases the data line again. This results in a wired AND, the data line will only be high if all decoders are finished. The host clock is suspended during the busy phase.
+
+#### Response Phase
+During the response phase the device transmits data at the currently set transmission speed.
 
 ### Commands
 ZUSI uses a command specific frame structure. The first byte of each frame marks the used command, all subsequent bytes will be sent according to frame description. 
 
-After each frame sent by the host, the connected decoders have an answer window. 
+#### CV-Read
+| Length | Name       | Value / Limits | Description                                    |
+| ------ | ---------- | -------------- | ---------------------------------------------- |
+| 1 byte | Command    | 0x01           | Command code                                   |
+| 1 byte | Count - 1  | 0 - 255 (=N-1) | Number of CVs to read                          |
+| 4 byte | CV address | 0 - 1023       | Address of the first CV                        |
+| 1 byte | CRC        |                | CRC8 checksum                                  |
+| 1 byte | Resync     | 0x80           | Resync byte                                    |
+|        |            |                |                                                |
+| 1 bit  | ACK valid  |                |                                                |
+| 1 bit  | ACK        |                |                                                |
+| x bits | Busy       |                |                                                |
+| N byte | CV values  |                | Values of the read CVs                         |
+| 1 byte | CRC        |                | CRC8 checksum                                  |
 
-#### CV Read
-Reads CV values from a decoder. The ZUSI specification permits up to 256 CVs to be read in one command, however this library only admits one CV at a time. 
+CV Read is used to read CV values ​​from a decoder.
 
-|Length|Name         |Value / Limits|Description|
-|:----:|:------------|:------------:|:----------|
-|1 Byte|Command      |0x01          |Command code|
-|1 Byte|Count - 1    |0 - 255 (=N-1)|Count of requested CVs - 1 -> up to 256 CVs per call|
-|4 Byte|CV Address    |0 - 1024      |Address of the first CV. Currently this is restricted to a value between 0 - 1024 (May 2014)|
-|1 Byte|CRC          |---           |CRC8 Checksum|
-|1 Byte|Resync       |0x80          |Byte used for resynchronisation before the ACK, with a 10µs delay|
-|||||
-|1 Bit |ACK valid    |---           |1 = ACK - 0 = NACK|
-|1 Bit |ACK          |---           |1 = ACK - 0 = NACK|
-|x Bits|Busy         |---           |0 while device is still busy|
-|N Byte|CV values    |---           |Values of requested CVs in order (1 Byte each)|
-|1 Byte|CRC          |---           |CRC8 Checksum|
+> [!WARNING]  
+> Current implementations only read one byte at a time.
 
-#### CV Write
-Writes CV values to a decoder. The ZUSI specification permits up to 256 CVs to be read in one command, however this library only admits one CV at a time. 
+#### CV-Write
+| Length | Name       | Value / Limits | Description             |
+| ------ |  --------- | -------------- | ----------------------- |
+| 1 byte | Command    | 0x02           | Command code            |
+| 1 byte | Count - 1  | 0 - 255        | Number of CVs to write  |
+| 4 byte | CV address | 0 - 1023       | Address of the first CV |
+| N byte | Values (N) |                | CV values to be written |
+| 1 byte | CRC        |                | CRC8 checksum           |
+| 1 byte | Resync     | 0x80           | Resync byte             |
+|        |            |                |                         |
+| 1 bit  | ACK valid  |                |                         |
+| 1 bit  | ACK        |                |                         |
+| x bits | Busy       |                |                         |
 
-|Length|Name         |Value / Limits|Description|
-|:----:|:------------|:------------:|:----------|
-|1 Byte|Command      |0x02          |Command code|
-|1 Byte|Count - 1    |0 - 255       |Count of CVs to write -> up to 256 CVs per call|
-|4 Byte|CV Address    |0 - 1024      |Address of the first CV. Currently this is restricted to a value between 0 - 1024 (May 2014)|
-|N Byte|Values (N)   |---           |Values to be written in actual order. N must be same as Count|
-|1 Byte|CRC          |---           |CRC8 Checksum|
-|1 Byte|Resync       |0x80          |Byte used for resynchronisation before the ACK, with a 10µs delay|
-|||||
-|1 Bit |ACK valid    |---           |1 = ACK - 0 = NACK|
-|1 Bit |ACK          |---           |1 = ACK - 0 = NACK|
-|x Bits|Busy         |---           |0 while device is still busy|
+CV Write is used to write CV values ​​into a decoder.
 
-#### Request Flash Block Size
-Requests the flash block size of the decoder. This will give a size limit for data packages targetting this decoder.
+> [!WARNING]  
+> Current implementations only write one byte at a time.
 
-|Length|Name         |Value / Limits|Description|
-|:----:|:---------   |:------------:|:----------|
-|1 Byte|Command      |0x03          |Command code|
-|1 Byte|CRC          |---           |CRC8 Checksum|
-|1 Byte|Resync       |0x80          |Byte used for resynchronisation before the ACK, with a 10 µs delay|
-|||||
-|1 Bit |ACK valid    |---           |1 = ACK - 0 = NACK|
-|1 Bit |ACK          |---           |1 = ACK - 0 = NACK|
-|x Bits|Busy         |---           |0 while device is still busy|
-|1 Byte|Block size   |---           |Block size of the decoder flash|
+#### ZPP-Erase
+| Length | Name          | Value / Limits | Description                  |
+| ------ | ------------  | -------------- | ---------------------------- |
+| 1 byte | Command       | 0x04           | Command code                 |
+| 1 byte | Security byte | 0x55           |                              |
+| 1 byte | Security byte | 0xAA           |                              |
+| 1 byte | CRC           |                | CRC8 checksum                |
+| 1 byte | Resync        | 0x80           | Resync byte                  |
+|        |               |                |                              |
+| 1 bit  | ACK valid     |                |                              |
+| 1 bit  | ACK           |                |                              |
+| x bits | Busy          |                |                              
 
-#### Delete Flash
-Deletes the flash memory of the decoder. 
+The ZPP Erase command can be used to erase the flash in the decoder.
 
-|Length|Name         |Value / Limits|Description|
-|:----:|:------------|:------------:|:----------|
-|1 Byte|Command      |0x04          |Command code|
-|1 Byte|Security byte|0x55          ||
-|1 Byte|Security byte|0xAA          ||
-|1 Byte|CRC          |---           |CRC8 Checksum|
-|1 Byte|Resync       |0x80          |Byte used for resynchronisation before the ACK, with a 10 µs delay|
-|||||
-|1 Bit |ACK valid    |---           |1 = ACK - 0 = NACK|
-|1 Bit |ACK          |---           |1 = ACK - 0 = NACK|
-|x Bits|Busy         |---           |0 while device is still busy|
+> [!WARNING]  
+> Deleting a NOR flash can take up to 200s depending on the manufacturer and type.
 
-#### Write Flash
-Writes data directly to the flash of the decoder
+#### ZPP-Write
+| Length | Name           | Value / Limits | Description                                                  |
+|  ----  |  ------------  | -------------- | ------------------------------------------------------------ |
+| 1 byte | Command        | 0x05           | Command code                                                 |
+| 1 byte | Size           |                | Size of the data block to write into the decoder flash       |
+| 4 byte | Address        |                | Absolute flash address of the first byte of sent flash block |
+| x byte | Data           | up to 256 byte | Block data to be written to decoder flash                    |
+| 1 byte | CRC            |                | CRC8 checksum                                                |
+| 1 byte | Resync         | 0x80           | Resync byte                                                  |
+|        |                |                |                                                              |
+| 1 bit  | ACK valid      |                |                                                              |
+| 1 bit  | ACK            |                |                                                              |
+| x bits | Busy           |                |                                                              |
 
-|Length|Name         |Value / Limits|Description|
-|:----:|:------------|:------------:|:----------|
-|1 Byte|Command      |0x05          |Command code|
-|1 Byte|Size         |---           |Size of the data block to write into the decoder flash|
-|4 Byte|Address       |---           |Absolute flash adress of the first byte of sent flash block|
-|x Byte|Data         |up to 256 Byte|Block data to be written to decoder flash|
-|1 Byte|CRC          |---           |CRC8 Checksum|
-|1 Byte|Resync       |0x80          |Byte used for resynchronisation before the ACK, with a 10 µs delay|
-|||||
-|1 Bit |ACK valid    |---           |1 = ACK - 0 = NACK|
-|1 Bit |ACK          |---           |1 = ACK - 0 = NACK|
-|x Bits|Busy         |---           |0 while device is still busy|
+ZPP Write is used to transfer ZPP data.
 
-#### Feature Request
-Requests the transmission capabilities of connected decoders. Feature bits (see Baudrate and Multiple) will be pulled to 0 when at least one decoder does not support the corresponding feature. 
+> [!WARNING]  
+> Current implementations only support a payload of **exactly** 256 bytes.
 
-|Length|Name         |Value / Limits|Description|
-|:----:|:------------|:------------:|:----------|
-|1 Byte|Command      |0x06          |Command code|
-|1 Byte|CRC          |---           |CRC8 Checksum|
-|1 Byte|Resync       |0x80          |Byte used for resynchronisation before the ACK, with a 10 µs delay|
-|||||
-|1 Bit |ACK valid    |---           |1 = ACK - 0 = NACK|
-|1 Bit |ACK          |---           |1 = ACK - 0 = NACK|
-|x Bits|Busy         |---           |0 while device is still busy|
-|1 Byte|Baudrate     |7 -> 1<br>6 -> 1<br>5 -> 1<br>4 -> 1<br>3 -> 1<br>2 -> 0<br>_ -> 1<br>1 -> 0<br>_ -> 1<br>0 -> 0<br>_ -> 1|<br><br><br><br><br>0,5533µs timing - supported<br>_______________ - unsuported<br>0,733µs timing - supported<br>______________ - unsuported<br>3,5µs timing (fallback) - supported<br>____________________ - unsupported|
-|1 Byte|N/A          |0xFF           ||
-|1 Byte|N/A          |0xFF           ||
-|1 Byte|Multiple     |7 -> 0<br>_ -> 1<br>6 -> 1<br>5 -> 1<br>4 -> 1<br>3 -> 1<br>2 -> 1<br>1 -> 1<br>0 -> 1|Multiple devices are not suppeorted<br>Multiple devices are supported<br><br><br><br><br><br><br><br>
+#### Features
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">Length</th>
+      <th style="text-align: center">Name</th>
+      <th style="text-align: center">Value / Limits</th>
+      <th style="text-align: center">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1 byte</td>
+      <td>Command</td>
+      <td>0x06</td>
+      <td>Command code</td>
+    </tr>
+    <tr>
+      <td>1 byte</td>
+      <td>CRC</td>
+      <td></td>
+      <td>CRC8 checksum</td>
+    </tr>
+    <tr>
+      <td>1 byte</td>
+      <td>Resync</td>
+      <td>0x80</td>
+      <td>Resync byte</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>1 bit</td>
+      <td>ACK valid</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>1 bit</td>
+      <td>ACK</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>x bits</td>
+      <td>Busy</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>1 byte</td>
+      <td>Baud rate flags</td>
+      <td></td>
+      <td>
+        Bit7:3=1 (always)<br>
+        Bit2=0 0.5533µs timing supported<br>
+        Bit1=0 0.733µs timing supported<br>
+        Bit0=0 3.5µs timing supported<br>
+      </td>
+    </tr>
+    <tr>
+      <td>1 byte</td>
+      <td>N/A</td>
+      <td>0xFF</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>1 byte</td>
+      <td>N/A</td>
+      <td>0xFF</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>1 byte</td>
+      <td>Device flags</td>
+      <td></td>
+      <td>
+        Bit7=0 not compatible with other devices at the same time<br>
+        Bit6:0=1 (always)<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+Features requests the transmission capabilities of connected devices. Feature bits (see baud rate and devices) will be pulled to 0 when at least one decoder does not support the corresponding feature.
+
+> [!WARNING]  
+> Personal note: I think someone mixed up the baud rate flags 0 and 1. As defined, now the fastest decoder determines the transmission speed, not the slowest.
 
 #### Exit
-This will exit the ZUSI mode and resume normal DCC operation
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">Length</th>
+      <th style="text-align: center">Name</th>
+      <th style="text-align: center">Value / Limits</th>
+      <th style="text-align: center">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1 byte</td>
+      <td>Command</td>
+      <td>0x07</td>
+      <td>Command code</td>
+    </tr>
+    <tr>
+      <td>1 byte</td>
+      <td>Security byte</td>
+      <td>0x55</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>1 byte</td>
+      <td>Security byte</td>
+      <td>0xAA</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>1 byte</td>
+      <td>Option</td>
+      <td></td>
+      <td>
+        Bit7:2=1 (always)<br>
+        Bit1=0 perform CV8 reset<br>
+        Bit0=0 reboot<br>
+      </td>
+    </tr>
+    <tr>
+      <td>1 byte</td>
+      <td>CRC</td>
+      <td></td>
+      <td>CRC8 checksum</td>
+    </tr>
+    <tr>
+      <td>1 byte</td>
+      <td>Resync</td>
+      <td>0x80</td>
+      <td>Resync byte</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>1 bit</td>
+      <td>ACK valid</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>1 bit</td>
+      <td>ACK</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>x bits</td>
+      <td>Busy</td>
+      <td></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
 
-|Length|Name         |Value / Limits|Description|
-|:----:|:------------|:------------:|:----------|
-|1 Byte|Command      |0x07          |Command code|
-|1 Byte|Security Byte|0x55          ||
-|1 Byte|Security Byte|0xAA          ||
-|1 Byte|Option       |---           |Will be masked with 0xF8:<br>0 -> 0 --> Reboot<br>0 -> 1 --> No reboot<br>1 -> 0 --> CV8 reset<br>1 -> 1 --> CV8 no reset|
-|1 Byte|CRC          |---           |CRC8 Checksum|
-|1 Byte|Resync       |0x80          |Byte used for resynchronisation before the ACK, with a 10 µs delay|
-|||||
-|1 Bit |ACK valid    |---           |1 = ACK - 0 = NACK|
-|1 Bit |ACK          |---           |1 = ACK - 0 = NACK|
-|x Bits|Busy         |---           |0 while device is still busy|
+This will exit the ZUSI and resume normal operation.
 
-#### Encrypt
-:construction:
+#### ZPP-LC-DC-Query
+| Length | Name            | Value / Limits | Description                                                                                |
+| ------ | --------------- | -------------- | ------------------------------------------------------------------------------------------ |
+| 1 byte | Command         | 0x0D           | Command code                                                                               |
+| 4 byte | Developer code  |                | Developer code (see [ZPP](https://github.com/ZIMO-Elektronik/ZPP)) file format description |
+| 1 byte | CRC             |                | CRC8 checksum                                                                              |
+| 1 byte | Resync          | 0x80           | Resync byte                                                                                |
+|        |                 |                |                                                                                            |
+| 1 bit  | ACK valid       |                |                                                                                            |
+| 1 bit  | ACK             |                |                                                                                            |
+| x bits | Busy            |                |                                                                                            |
+| 1 byte | Load code valid |                | 0x00 Load code invalid<br>0x01 Load code valid                                             |
+| 1 byte | CRC             |                | CRC8 checksum                                                                              |
+
+A ZPP-LC-DC query can be used to check whether the decoders contain a valid load code before deleting the flash.
 
 ### Typical processes
 #### ZPP Update
-:construction:
+1. [Entry](#entry) sequence to put devices into ZUSI
+2. [Features](#features) to determine transmission speed
+3. [ZPP-LC-DC-Query](#zpp-lc-dc-query) (optional) to check for valid load code
+   - [Exit](#exit) on negative answer
+4. [ZPP-Erase](#zpp-erase)
+5. [ZPP-Write](#zpp-write)
+7. [Exit](#exit)
+8. Leave voltage switched on for at least 1s
 
 ## Getting Started
 ### Prerequisites
-:construction:
+- C++23 compatible compiler
+- [CMake](https://cmake.org/) ( >= 3.25 )
 
 ### Installation
-:construction:
+This library is meant to be consumed with CMake.
+
+```cmake
+# Either by including it with CPM
+cpmaddpackage("gh:ZIMO-Elektronik/ZUSI@0.9.0")
+
+# or the FetchContent module
+FetchContent_Declare(
+  ZUSI
+  GIT_REPOSITORY "https://github.com/ZIMO-Elektronik/ZUSI"
+  GIT_TAG v0.9.0)
+
+target_link_libraries(YourTarget PRIVATE ZUSI::ZUSI)
+```
 
 ### Build
-:construction:
+If the build is running as a top-level CMake project then tests and a small example will be generated.
+```sh
+cmake -Bbuild
+cmake --build build --target ZUSIZppLoad
+```
 
 ## Usage
 To use the ZUSI library, a number of virtual functions must be implemented. 
@@ -221,7 +403,7 @@ In case of the receiving side it is necessary to derive from `zusi::rx::Base`.
 ```cpp
 #include <zusi/zusi.hpp>
 
-class ZppLoad : public zusi::rx::Base {
+class Receiver : public zusi::rx::Base {
   // Receive a byte
   std::optional<uint8_t> receiveByte() const final { return 0u; }
 
@@ -237,11 +419,11 @@ class ZppLoad : public zusi::rx::Base {
   // Write ZPP
   void writeZpp(uint32_t addr, std::span<uint8_t const> bytes) final {}
 
-  // Return value of feature request
+  // Return value of features query
   zusi::Features features() const final { return {}; }
 
   // Exit
-  [[noreturn]] void exit(uint8_t flags) final {}
+  void exit(uint8_t flags) final {}
 
   // Check if the load code is valid
   bool loadCodeValid(std::span<uint8_t const, 4uz> developer_code) const final {
@@ -254,14 +436,14 @@ class ZppLoad : public zusi::rx::Base {
   // Wait till clock pin equals state with a resync timeout
   bool waitClock(bool state) const final { return true; }
 
-  // Set or clear data pin
+  // Write data line
   void writeData(bool state) const final {}
 
-  // Switch to SPI
-  void spi() const final {}
+  // Switch to SPI slave
+  void spiSlave() const final {}
 
-  // Switch to GPIO
-  void gpio() const final {}
+  // Switch to GPIO output
+  void gpioOutput() const final {}
 
   // Optional, blink front- and rear lights
   void toggleLights() const final {}
@@ -269,4 +451,35 @@ class ZppLoad : public zusi::rx::Base {
 ```
 
 ### Transmitter
-:construction:
+In case of the receiving side it is necessary to derive from `zusi::tx::Base`.
+
+```cpp
+#include <zusi/zusi.hpp>
+
+class Transmitter : public zusi::tx::Base {
+  /// Transmit byte at specific transmission speed
+  void transmitBytes(std::span<uint8_t const> bytes,
+                     zusi::Mbps mbps) const final {}
+
+  // Switch to SPI master
+  void spiMaster() const final {}
+
+  // Switch to GPIO input
+  void gpioInput() const final {}
+
+  // Switch to GPIO output
+  void gpioOutput() const final {}
+
+  // Write clock line
+  void writeClock(bool state) const final {}
+
+  // Write data line
+  void writeData(bool state) const final {}
+
+  // Read data line
+  bool readData() const final { return true; }
+
+  // Delay microseconds
+  void delayUs(uint32_t us) const final {}
+};
+```
