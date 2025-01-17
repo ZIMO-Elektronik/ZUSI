@@ -14,8 +14,8 @@
 
 namespace zusi::rx {
 
-/// Execute
-void Base::execute() {
+/// Receive
+void Base::receive() {
   switch (_state) {
     case State::ReceiveCommand:
       toggleLights();

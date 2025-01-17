@@ -75,8 +75,8 @@ class Transmitter : public zusi::tx::Base {
 
 int main() {
   Receiver rx{};
-  rx.execute();
+  rx.receive();
 
   Transmitter tx{};
-  // tx.execute();
+  tx.transmit(zusi::Packet{});
 }

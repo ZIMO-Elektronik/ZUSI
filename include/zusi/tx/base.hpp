@@ -16,6 +16,7 @@
 #include <ztl/inplace_vector.hpp>
 #include "../features.hpp"
 #include "../mbps.hpp"
+#include "../response.hpp"
 
 namespace zusi::tx {
 
@@ -27,13 +28,19 @@ public:
   /// Transmit entry sequence
   void enter() const;
 
-  /// Generic execute
+  /// Transmit packet
   ///
-  /// \param  bytes                             Bytes containing ZUSI packet
-  /// \retval ztl::inplace_vector<uint8_t, 4uz> Returned data (can be empty)
-  /// \retval std::nullopt                      Error
-  std::optional<ztl::inplace_vector<uint8_t, 4uz>>
-  execute(std::span<uint8_t const> data);
+  /// \param  packet        Packet
+  /// \retval Response      Returned data (can be empty)
+  /// \retval std::nullopt  Error
+  std::optional<Response> transmit(Packet const& packet);
+
+  /// Transmit bytes
+  ///
+  /// \param  bytes         Bytes containing ZUSI packet
+  /// \retval Response      Returned data (can be empty)
+  /// \retval std::nullopt  Error
+  std::optional<Response> transmit(std::span<uint8_t const> bytes);
 
   /// Read CV
   ///

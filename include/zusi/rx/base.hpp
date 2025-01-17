@@ -28,7 +28,7 @@ public:
   /// Dtor
   virtual constexpr ~Base() = default;
 
-  void execute();
+  void receive();
 
 private:
   /// Read CV

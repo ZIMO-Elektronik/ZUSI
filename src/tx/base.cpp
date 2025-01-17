@@ -30,13 +30,21 @@ void Base::enter() const {
   delayUs(resync_timeout_us);
 }
 
-/// Generic execute
+/// Transmit bytes
 ///
-/// \param  bytes                             Bytes containing ZUSI packet
-/// \retval ztl::inplace_vector<uint8_t, 4uz> Returned data (can be empty)
-/// \retval std::nullopt                      Error
-std::optional<ztl::inplace_vector<uint8_t, 4uz>>
-Base::execute(std::span<uint8_t const> bytes) {
+/// \param  packet        Packet
+/// \retval Response      Returned data (can be empty)
+/// \retval std::nullopt  Error
+std::optional<Response> Base::transmit(Packet const& packet) {
+  return transmit({cbegin(packet), size(packet)});
+}
+
+/// Transmit bytes
+///
+/// \param  bytes         Bytes containing packet
+/// \retval Response      Returned data (can be empty)
+/// \retval std::nullopt  Error
+std::optional<Response> Base::transmit(std::span<uint8_t const> bytes) {
   switch (std::bit_cast<Command>(bytes.front())) {
     case Command::CvRead:
       if (auto const cv{readCv(data2uint32(&bytes[addr_pos]))})

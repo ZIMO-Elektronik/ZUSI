@@ -1,14 +1,17 @@
 # Changelog
 
 ## 0.9.0
+- Add `Reponse` type
 - Add LC-DC query to `tx::Base`
-- Simpler return type for `tx::Base::execute`
+- Add `ZUSI_MAX_RESPONSE_SIZE` definition
+- Simpler return type for `tx::Base::transmit`
+- Rename `rx::Base::execute` to `rx::Base::receive`
 - Rename `rx::Base::spi` to `rx::Base::spiSlave`
 - Rename `rx::Base::gpio` to `rx::Base::gpioOutput`
 - Bugfix feature query is always transmitted at the slowest speed ([#7](https://github.com/ZIMO-Elektronik/ZUSI/issues/7))
 
 ## 0.8.0
-- Add generic `tx::Base::execute`
+- Add generic `tx::Base::transmit`
 - Bugfix array index in encrypt command ([#2](https://github.com/ZIMO-Elektronik/ZUSI/issues/2))
 - Bugfix CV read skips checksum ([#5](https://github.com/ZIMO-Elektronik/ZUSI/issues/5))
 
