@@ -82,7 +82,7 @@ After the last bit of the host transmission (after the resynchronization phase),
 Again, there is a special workaround for the MX644. The ACK phase uses an asymmetric clock period of 10µs high to 20µs low. Both ACK valid and ACK/NAK will be set by the decoder on a rising edge on clock and can be read on the falling edge.
 
 #### Busy Phase
-Some commands (e.g. [ZPP Erase](#zpp-erase) or [ZPP Write](#zpp-write)) contain a busy phase. Similar to the ACK bits, a bit is clocked by the host. The decoder waits for the clock line to be high and then pulls the data line low. While the data line is low, the decoder can execute the received command. When it is finished, it waits for the clock line to be low and then releases the data line again. This results in a wired AND, the data line will only be high if all decoders are finished. The host clock is suspended during the busy phase.
+Some commands (e.g. [ZPP Erase](#zpp-erase) or [ZPP Write](#zpp-write)) contain a busy phase. Similar to the ACK bits, a bit is clocked by the host. The decoder waits for the clock line to be high and then pulls the data line low. While the data line is low, the decoder can execute the received command. When it is finished, it releases the data line again. This can be done asynchronously and results in a wired AND, the data line will only be high if all decoders are finished. The host **clock is suspended** during the busy phase.
 
 #### Response Phase
 During the response phase the device transmits data at the currently set transmission speed.
@@ -101,7 +101,7 @@ ZUSI uses a command specific frame structure. The first byte of each frame marks
 |        |            |                |                                                |
 | 1 bit  | ACK valid  |                |                                                |
 | 1 bit  | ACK        |                |                                                |
-| x bits | Busy       |                |                                                |
+| 1 bit  | Busy       |                |                                                |
 | N byte | CV values  |                | Values of the read CVs                         |
 | 1 byte | CRC        |                | CRC8 checksum                                  |
 
@@ -122,7 +122,7 @@ CV Read is used to read CV values ​​from a decoder.
 |        |            |                |                         |
 | 1 bit  | ACK valid  |                |                         |
 | 1 bit  | ACK        |                |                         |
-| x bits | Busy       |                |                         |
+| 1 bit  | Busy       |                |                         |
 
 CV Write is used to write CV values ​​into a decoder.
 
@@ -140,7 +140,7 @@ CV Write is used to write CV values ​​into a decoder.
 |        |               |                |                              |
 | 1 bit  | ACK valid     |                |                              |
 | 1 bit  | ACK           |                |                              |
-| x bits | Busy          |                |                              
+| 1 bit  | Busy          |                |                              
 
 The ZPP Erase command can be used to erase the flash in the decoder.
 
@@ -159,7 +159,7 @@ The ZPP Erase command can be used to erase the flash in the decoder.
 |        |                |                |                                                              |
 | 1 bit  | ACK valid      |                |                                                              |
 | 1 bit  | ACK            |                |                                                              |
-| x bits | Busy           |                |                                                              |
+| 1 bit  | Busy           |                |                                                              |
 
 ZPP Write is used to transfer ZPP data.
 
@@ -214,7 +214,7 @@ ZPP Write is used to transfer ZPP data.
       <td></td>
     </tr>
     <tr>
-      <td>x bits</td>
+      <td>1 bit </td>
       <td>Busy</td>
       <td></td>
       <td></td>
@@ -329,7 +329,7 @@ Features requests the transmission capabilities of connected devices. Feature bi
       <td></td>
     </tr>
     <tr>
-      <td>x bits</td>
+      <td>1 bit </td>
       <td>Busy</td>
       <td></td>
       <td></td>
@@ -349,7 +349,7 @@ This will exit the ZUSI and resume normal operation.
 |        |                 |                |                                                                                            |
 | 1 bit  | ACK valid       |                |                                                                                            |
 | 1 bit  | ACK             |                |                                                                                            |
-| x bits | Busy            |                |                                                                                            |
+| 1 bit  | Busy            |                |                                                                                            |
 | 1 byte | Load code valid |                | 0x00 Load code invalid<br>0x01 Load code valid                                             |
 | 1 byte | CRC             |                | CRC8 checksum                                                                              |
 
