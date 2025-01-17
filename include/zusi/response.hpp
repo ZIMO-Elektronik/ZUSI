@@ -11,10 +11,15 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <ztl/inplace_vector.hpp>
 
 namespace zusi {
 
-using Response = ztl::inplace_vector<uint8_t, ZUSI_MAX_RESPONSE_SIZE>;
+/// Response from decoders
+///
+/// Either empty (`std::nullopt`) on error, or vector with up to 4 bytes.
+using Response =
+  std::optional<ztl::inplace_vector<uint8_t, ZUSI_MAX_RESPONSE_SIZE>>;
 
 } // namespace zusi

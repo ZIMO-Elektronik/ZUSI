@@ -32,19 +32,17 @@ void Base::enter() const {
 
 /// Transmit bytes
 ///
-/// \param  packet        Packet
-/// \retval Response      Returned data (can be empty)
-/// \retval std::nullopt  Error
-std::optional<Response> Base::transmit(Packet const& packet) {
+/// \param  packet    Packet
+/// \return Response  Returned data (can be empty)
+Response Base::transmit(Packet const& packet) {
   return transmit({cbegin(packet), size(packet)});
 }
 
 /// Transmit bytes
 ///
-/// \param  bytes         Bytes containing packet
-/// \retval Response      Returned data (can be empty)
-/// \retval std::nullopt  Error
-std::optional<Response> Base::transmit(std::span<uint8_t const> bytes) {
+/// \param  bytes     Bytes containing packet
+/// \return Response  Returned data (can be empty)
+Response Base::transmit(std::span<uint8_t const> bytes) {
   switch (std::bit_cast<Command>(bytes.front())) {
     case Command::CvRead:
       if (auto const cv{readCv(data2uint32(&bytes[addr_pos]))})

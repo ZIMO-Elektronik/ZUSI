@@ -30,17 +30,15 @@ public:
 
   /// Transmit packet
   ///
-  /// \param  packet        Packet
-  /// \retval Response      Returned data (can be empty)
-  /// \retval std::nullopt  Error
-  std::optional<Response> transmit(Packet const& packet);
+  /// \param  packet    Packet
+  /// \return Response  Returned data (can be empty)
+  Response transmit(Packet const& packet);
 
   /// Transmit bytes
   ///
-  /// \param  bytes         Bytes containing ZUSI packet
-  /// \retval Response      Returned data (can be empty)
-  /// \retval std::nullopt  Error
-  std::optional<Response> transmit(std::span<uint8_t const> bytes);
+  /// \param  bytes     Bytes containing ZUSI packet
+  /// \return Response  Returned data (can be empty)
+  Response transmit(std::span<uint8_t const> bytes);
 
   /// Read CV
   ///
