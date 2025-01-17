@@ -14,8 +14,8 @@
 
 namespace zusi::rx {
 
-/// Execute
-void Base::execute() {
+/// Receive
+void Base::receive() {
   switch (_state) {
     case State::ReceiveCommand:
       toggleLights();
@@ -54,7 +54,7 @@ Base::State Base::receiveData() {
     case Command::ZppErase: success = receiveBytes(3uz); break;
     case Command::Features: success = receiveBytes(1uz); break;
     case Command::Exit: success = receiveBytes(4uz); break;
-    case Command::Encrypt: success = receiveBytes(5uz); break;
+    case Command::ZppLcDcQuery: success = receiveBytes(5uz); break;
     default: break;
   }
   return success ? State::ReceiveResync : State::Error;
@@ -67,7 +67,7 @@ Base::State Base::receiveResync() {
   _ack = ackOrNack();
   if (auto const retval{receiveByte()}; !retval) return State::Error;
   else if (*retval == resync_byte) {
-    gpio();
+    gpioOutput();
     return State::TransmitAck;
   } else return State::Error;
 }
@@ -96,7 +96,7 @@ Base::State Base::transmitBusy() {
   auto const retval{execute(static_cast<Command>(_packet[0uz]))};
   if (!waitClock(false)) return State::Error;
   writeData(true);
-  if (retval == State::ReceiveCommand) spi();
+  if (retval == State::ReceiveCommand) spiSlave();
   return retval;
 }
 
@@ -116,19 +116,20 @@ Base::State Base::transmitData() {
 Base::State Base::execute(Command cmd) {
   State retval{State::ReceiveCommand};
   uint32_t const addr{data2uint32(&_packet[2uz])};
-  size_t const count{_packet[1uz] + 1uz};
   switch (cmd) {
     case Command::CvRead:
-      for (auto i{0uz}; i < count; ++i) _packet[0uz + i] = readCv(addr + i);
-      _packet[count] = crc8({&_packet[0uz], count});
-      _packet.resize(count + 1uz);
+      _packet[0uz] = readCv(addr);
+      _packet[1uz] = crc8(_packet[0uz]);
+      _packet.resize(2uz);
       retval = State::TransmitData;
       break;
-    case Command::CvWrite:
-      for (auto i{0uz}; i < count; ++i) writeCv(addr + i, _packet[6uz + i]);
-      break;
+    case Command::CvWrite: writeCv(addr, _packet[6uz]); break;
     case Command::ZppErase: eraseZpp(); break;
-    case Command::ZppWrite: writeZpp(addr, {&_packet[6uz], count}); break;
+    case Command::ZppWrite: {
+      size_t const count{_packet[1uz] + 1uz};
+      writeZpp(addr, {&_packet[6uz], count});
+      break;
+    }
     case Command::Features: {
       auto const feature_bytes{features()};
       std::copy(cbegin(feature_bytes), cend(feature_bytes), begin(_packet));
@@ -136,7 +137,7 @@ Base::State Base::execute(Command cmd) {
       retval = State::TransmitData;
       break;
     }
-    case Command::Encrypt: {
+    case Command::ZppLcDcQuery: {
       std::span<uint8_t const, 4uz> developer_code{&_packet[1uz], 4uz};
       _packet[0uz] = loadCodeValid(developer_code);
       _packet[1uz] = crc8(_packet[0uz]);
@@ -153,7 +154,7 @@ Base::State Base::execute(Command cmd) {
 ///
 /// \return State
 Base::State Base::reset() {
-  spi();
+  spiSlave();
   _crc = 0u;
   _ack = false;
   return State::ReceiveCommand;
@@ -199,7 +200,7 @@ bool Base::ackOrNack() {
     case Command::CvRead: [[fallthrough]];
     case Command::CvWrite: [[fallthrough]];
     case Command::Features: [[fallthrough]];
-    case Command::Encrypt: return !_crc ? true : false;
+    case Command::ZppLcDcQuery: return !_crc ? true : false;
     // Requires CRC and address validation by decryption
     case Command::ZppWrite:
       return !_crc && addressValid(data2uint32(&_packet[2uz])) ? true : false;

@@ -2,27 +2,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-/// Commands
+/// Response
 ///
-/// \file   zusi/command.hpp
+/// \file   zusi/response.hpp
 /// \author Vincent Hamp
-/// \date   21/03/2023
+/// \date   17/01/2025
 
 #pragma once
 
 #include <cstdint>
+#include <ztl/inplace_vector.hpp>
 
 namespace zusi {
 
-enum class Command : uint8_t {
-  None = 0x00u,
-  CvRead = 0x01u,
-  CvWrite = 0x02u,
-  ZppErase = 0x04u,
-  ZppWrite = 0x05u,
-  Features = 0x06u,
-  Exit = 0x07u,
-  ZppLcDcQuery = 0x0D
-};
+using Response = ztl::inplace_vector<uint8_t, ZUSI_MAX_RESPONSE_SIZE>;
 
 } // namespace zusi

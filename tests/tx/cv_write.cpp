@@ -14,9 +14,6 @@ using ::Mbps::_1_364;
 using ::Mbps::_1_807;
 using ::zusi::resync_byte;
 
-inline constexpr uint32_t mock_addr{0x000000FFu};
-inline constexpr uint8_t mock_val{0x0F};
-
 TEST_F(TxTest, cv_write_no_ack_valid) {
   InSequence seq;
   EXPECT_CALL(_mock, transmitBytes(_, Ne(_0_1)));
@@ -25,8 +22,7 @@ TEST_F(TxTest, cv_write_no_ack_valid) {
   EXPECT_CALL(_mock, readData()).WillOnce(Return(true)); // not ACK valid
   EXPECT_CALL(_mock, spiMaster());
 
-  ASSERT_FALSE(_mock.writeCv(mock_addr, mock_val))
-    << "Should abort if not ACK valid";
+  ASSERT_FALSE(_mock.writeCv(_addr, _cv)) << "Should abort if not ACK valid";
 }
 
 TEST_F(TxTest, cv_write_nak) {
@@ -38,7 +34,7 @@ TEST_F(TxTest, cv_write_nak) {
   EXPECT_CALL(_mock, readData()); // NAK
   EXPECT_CALL(_mock, spiMaster());
 
-  ASSERT_FALSE(_mock.writeCv(mock_addr, mock_val)) << "Should abort after NAK";
+  ASSERT_FALSE(_mock.writeCv(_addr, _cv)) << "Should abort after NAK";
 }
 
 TEST_F(TxTest, cv_write_busy_wait) {
@@ -52,7 +48,7 @@ TEST_F(TxTest, cv_write_busy_wait) {
   EXPECT_CALL(_mock, readData()).WillOnce(Return(true)); // Busy End
   EXPECT_CALL(_mock, spiMaster());
 
-  ASSERT_TRUE(_mock.writeCv(mock_addr, mock_val))
+  ASSERT_TRUE(_mock.writeCv(_addr, _cv))
     << "Should continue after no longer busy";
 }
 
@@ -70,6 +66,6 @@ TEST_F(TxTest, cv_write_ack) {
   EXPECT_CALL(_mock, readData()).WillOnce(Return(true)); // Busy
   EXPECT_CALL(_mock, spiMaster());
 
-  auto tmp = _mock.writeCv(mock_addr, mock_val);
+  auto tmp = _mock.writeCv(_addr, _cv);
   ASSERT_TRUE(tmp) << "Should return true if command is correct";
 }

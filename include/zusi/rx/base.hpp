@@ -12,6 +12,7 @@
 
 #include <climits>
 #include <cstddef>
+#include <span>
 #include <utility>
 #include "../command.hpp"
 #include "../crc8.hpp"
@@ -27,7 +28,7 @@ public:
   /// Dtor
   virtual constexpr ~Base() = default;
 
-  void execute();
+  void receive();
 
 private:
   /// Read CV
@@ -39,8 +40,8 @@ private:
   /// Write CV
   ///
   /// \param  addr  CV address
-  /// \param  value CV value
-  virtual void writeCv(uint32_t addr, uint8_t value) = 0;
+  /// \param  byte  CV value
+  virtual void writeCv(uint32_t addr, uint8_t byte) = 0;
 
   /// Erase ZPP
   virtual void eraseZpp() = 0;
@@ -61,7 +62,7 @@ private:
   /// Exit
   ///
   /// \param  flags Flags
-  [[noreturn]] virtual void exit(uint8_t flags) = 0;
+  virtual void exit(uint8_t flags) = 0;
 
   /// Check if load code is valid
   ///
@@ -91,16 +92,16 @@ private:
   /// \retval false Timeout occurred
   virtual bool waitClock(bool state) const = 0;
 
-  /// Set data to state
+  /// Write data line
   ///
   /// \param  state State
   virtual void writeData(bool state) const = 0;
 
-  /// Switch to SPI
-  virtual void spi() const = 0;
+  /// Switch to SPI slave
+  virtual void spiSlave() const = 0;
 
-  /// Switch to GPIO
-  virtual void gpio() const = 0;
+  /// Switch to GPIO output
+  virtual void gpioOutput() const = 0;
 
   /// Toggle front- and rear lights
   virtual void toggleLights() const {}

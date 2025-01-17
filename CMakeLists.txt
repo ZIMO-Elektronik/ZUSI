@@ -15,8 +15,11 @@ project(
   LANGUAGES CXX)
 
 set(ZUSI_MAX_PACKET_SIZE
-    264u
+    263u
     CACHE STRING "Maximum size of a packet in bytes")
+set(ZUSI_MAX_RESPONSE_SIZE
+    4u
+    CACHE STRING "Maximum size of a response in bytes")
 
 file(GLOB_RECURSE SRC src/*.cpp)
 add_library(ZUSI STATIC ${SRC})
@@ -24,8 +27,9 @@ add_library(ZUSI::ZUSI ALIAS ZUSI)
 
 target_compile_features(ZUSI PUBLIC cxx_std_23)
 
-target_compile_definitions(ZUSI
-                           PUBLIC ZUSI_MAX_PACKET_SIZE=${ZUSI_MAX_PACKET_SIZE})
+target_compile_definitions(
+  ZUSI PUBLIC ZUSI_MAX_PACKET_SIZE=${ZUSI_MAX_PACKET_SIZE}
+              ZUSI_MAX_RESPONSE_SIZE=${ZUSI_MAX_RESPONSE_SIZE})
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   target_include_directories(
