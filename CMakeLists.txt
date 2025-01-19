@@ -17,9 +17,9 @@ project(
 set(ZUSI_MAX_PACKET_SIZE
     263u
     CACHE STRING "Maximum size of a packet in bytes")
-set(ZUSI_MAX_RESPONSE_SIZE
+set(ZUSI_MAX_FEEDBACK_SIZE
     4u
-    CACHE STRING "Maximum size of a response in bytes")
+    CACHE STRING "Maximum size of feedback in bytes")
 
 file(GLOB_RECURSE SRC src/*.cpp)
 add_library(ZUSI STATIC ${SRC})
@@ -29,7 +29,7 @@ target_compile_features(ZUSI PUBLIC cxx_std_23)
 
 target_compile_definitions(
   ZUSI PUBLIC ZUSI_MAX_PACKET_SIZE=${ZUSI_MAX_PACKET_SIZE}
-              ZUSI_MAX_RESPONSE_SIZE=${ZUSI_MAX_RESPONSE_SIZE})
+              ZUSI_MAX_FEEDBACK_SIZE=${ZUSI_MAX_FEEDBACK_SIZE})
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   target_include_directories(

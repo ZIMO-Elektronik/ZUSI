@@ -2,9 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-/// Response
+/// Feedback
 ///
-/// \file   zusi/response.hpp
+/// \file   zusi/feedback.hpp
 /// \author Vincent Hamp
 /// \date   17/01/2025
 
@@ -16,10 +16,10 @@
 
 namespace zusi {
 
-/// Response from decoders
+/// Feedback from decoders
 ///
 /// Either empty (`std::nullopt`) on error, or vector with up to 4 bytes.
-using Response =
-  std::optional<ztl::inplace_vector<uint8_t, ZUSI_MAX_RESPONSE_SIZE>>;
+using Feedback =
+  std::optional<ztl::inplace_vector<uint8_t, ZUSI_MAX_FEEDBACK_SIZE>>;
 
 } // namespace zusi

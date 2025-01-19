@@ -33,45 +33,44 @@ void Base::enter() const {
 /// Transmit bytes
 ///
 /// \param  packet    Packet
-/// \return Response  Returned data (can be empty)
-Response Base::transmit(Packet const& packet) {
+/// \return Feedback  Returned data (can be empty)
+Feedback Base::transmit(Packet const& packet) {
   return transmit({cbegin(packet), size(packet)});
 }
 
 /// Transmit bytes
 ///
 /// \param  bytes     Bytes containing packet
-/// \return Response  Returned data (can be empty)
-Response Base::transmit(std::span<uint8_t const> bytes) {
+/// \return Feedback  Returned data (can be empty)
+Feedback Base::transmit(std::span<uint8_t const> bytes) {
   switch (std::bit_cast<Command>(bytes.front())) {
     case Command::CvRead:
       if (auto const cv{readCv(data2uint32(&bytes[addr_pos]))})
-        return ztl::inplace_vector<uint8_t, 4uz>{*cv};
+        return Feedback::value_type{*cv};
       break;
     case Command::CvWrite:
       if (writeCv(data2uint32(&bytes[addr_pos]), bytes[data_pos]))
-        return ztl::inplace_vector<uint8_t, 4uz>{};
+        return Feedback::value_type{};
       break;
     case Command::ZppErase:
-      if (eraseZpp()) return ztl::inplace_vector<uint8_t, 4uz>{};
+      if (eraseZpp()) return Feedback::value_type{};
       break;
     case Command::ZppWrite:
       if (writeZpp(data2uint32(&bytes[addr_pos]),
                    bytes.subspan(data_pos, bytes[data_cnt_pos] + 1uz)))
-        return ztl::inplace_vector<uint8_t, 4uz>{};
+        return Feedback::value_type{};
       break;
     case Command::Features:
       if (auto const feats{features()})
-        return ztl::inplace_vector<uint8_t, 4uz>{
+        return Feedback::value_type{
           (*feats)[0uz], (*feats)[1uz], (*feats)[2uz], (*feats)[3uz]};
       break;
     case Command::Exit:
-      if (exit(bytes[exit_flags_pos]))
-        return ztl::inplace_vector<uint8_t, 4uz>{};
+      if (exit(bytes[exit_flags_pos])) return Feedback::value_type{};
       break;
     case Command::ZppLcDcQuery: {
       if (auto const valid{lcDcQuery(bytes.subspan<1uz, 4uz>())})
-        return ztl::inplace_vector<uint8_t, 4uz>{*valid};
+        return Feedback::value_type{*valid};
       break;
     }
     default: break;

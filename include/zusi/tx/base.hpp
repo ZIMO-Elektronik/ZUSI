@@ -15,8 +15,8 @@
 #include <span>
 #include <ztl/inplace_vector.hpp>
 #include "../features.hpp"
+#include "../feedback.hpp"
 #include "../mbps.hpp"
-#include "../response.hpp"
 
 namespace zusi::tx {
 
@@ -31,14 +31,14 @@ public:
   /// Transmit packet
   ///
   /// \param  packet    Packet
-  /// \return Response  Returned data (can be empty)
-  Response transmit(Packet const& packet);
+  /// \return Feedback  Returned data (can be empty)
+  Feedback transmit(Packet const& packet);
 
   /// Transmit bytes
   ///
   /// \param  bytes     Bytes containing ZUSI packet
-  /// \return Response  Returned data (can be empty)
-  Response transmit(std::span<uint8_t const> bytes);
+  /// \return Feedback  Returned data (can be empty)
+  Feedback transmit(std::span<uint8_t const> bytes);
 
   /// Read CV
   ///

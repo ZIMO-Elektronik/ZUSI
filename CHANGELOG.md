@@ -1,9 +1,9 @@
 # Changelog
 
 ## 0.9.0
-- Add `Reponse` type
 - Add LC-DC query to `tx::Base`
-- Add `ZUSI_MAX_RESPONSE_SIZE` definition
+- Add `Feedback` type
+- Add `ZUSI_MAX_FEEDBACK_SIZE` definition
 - Simpler return type for `tx::Base::transmit`
 - Rename `rx::Base::execute` to `rx::Base::receive`
 - Rename `rx::Base::spi` to `rx::Base::spiSlave`
