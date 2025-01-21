@@ -2,7 +2,7 @@
 
 mode compact
 scale 300 as 50 pixels
-hide time-axis
+' hide time-axis
 
 binary "CLK" as CLK
 CLK is 50 pixels height
@@ -174,39 +174,39 @@ concise "Device" as TX
 
 ' CV
 6055 is high
-+35 is low
-+35 is high
-+35 is low
-+35 is high
-+35 is low
-+35 is high
-+35 is low
-+35 is high
-+35 is low
-+35 is high
-+35 is low
-+35 is high
-+35 is low
-+35 is high
-+35 is low
++100 is low
++200 is high
++100 is low
++200 is high
++100 is low
++200 is high
++100 is low
++200 is high
++100 is low
++200 is high
++100 is low
++200 is high
++100 is low
++200 is high
++100 is low
 
 ' CRC8
-6615 is high
-+35 is low
-+35 is high
-+35 is low
-+35 is high
-+35 is low
-+35 is high
-+35 is low
-+35 is high
-+35 is low
-+35 is high
-+35 is low
-+35 is high
-+35 is low
-+35 is high
-+35 is low
+8455 is high
++100 is low
++200 is high
++100 is low
++200 is high
++100 is low
++200 is high
++100 is low
++200 is high
++100 is low
++200 is high
++100 is low
++200 is high
++100 is low
++200 is high
++100 is low
 
 @RX
 0 is {hidden}
@@ -290,43 +290,42 @@ concise "Device" as TX
 
 ' Busy
 5555 is low
-+100 is low
 +400 is high
 
 ' CV
 6055 is low
-+35 is low
-+35 is low
-+35 is low
-+35 is low
-+35 is low
-+35 is high
-+35 is high
-+35 is low
-+35 is low
-+35 is low
-+35 is low
-+35 is low
-+35 is low
++100 is low
++200 is low
++100 is low
++200 is low
++100 is low
++200 is high
++100 is high
++200 is low
++100 is low
++200 is low
++100 is low
++200 is low
++100 is low
 
 ' CRC8
-6615 is low
-+35 is low
-+35 is high
-+35 is high
-+35 is low
-+35 is low
-+35 is low
-+35 is low
-+35 is low
-+35 is low
-+35 is low
-+35 is low
-+35 is high
-+35 is high
-+35 is high
-+35 is high
-+35 is low
+8455 is low
++100 is low
++200 is high
++100 is high
++200 is low
++100 is low
++200 is low
++100 is low
++200 is low
++100 is low
++200 is low
++100 is low
++200 is high
++100 is high
++200 is high
++100 is high
++200 is low
 
 @TX
 0 is {hidden}
@@ -334,7 +333,7 @@ concise "Device" as TX
 5255 is ACK1
 5555 is Busy
 6055 is "CV (0x08)"
-6615 is "CRC8 (0xC2)"
-7175 is {hidden}
+8455 is "CRC8 (0xC2)"
+10855 is {hidden}
 
 @enduml

@@ -68,7 +68,7 @@ The following graphic shows the transmission of a [CV Read](#cv-read) packet inc
 During the command phase the host transmits a [command](#commands) including any data at the currently set transmission speed.
 
 #### Resynchronization Phase
-To avoid problems with the MX644, a resynchronization phase has been introduced between host transmission and device response. This phase consists of a delay of at least 10µs, followed by a transmission of the byte **0x80**. The clock period for the transmission is 10µs, which corresponds to a an SPI frequency of 0.1Mbps.
+To avoid problems with the MX644, a resynchronization phase has been introduced between host transmission and device response. This phase consists of a delay of at least 10µs, followed by a transmission of the byte **0x80**. The clock period for the transmission is 10µs, which corresponds to a an SPI frequency of 0.1Mbps. **This asynchronous clock period is maintained for the complete feedback**.
 
 To catch asynchronous behavior, the state-machine of a decoder will be reset after 10ms of no activity on the clock. This can be used to resync all decoders.
 
@@ -85,7 +85,7 @@ Again, there is a special workaround for the MX644. The ACK phase uses an asymme
 Some commands (e.g. [ZPP Erase](#zpp-erase) or [ZPP Write](#zpp-write)) contain a busy phase. Similar to the ACK bits, a bit is clocked by the host. The decoder waits for the clock line to be high and then pulls the data line low. While the data line is low, the decoder can execute the received command. When it is finished, it releases the data line again. This can be done asynchronously and results in a wired AND, the data line will only be high if all decoders are finished. The host **clock is suspended** during the busy phase.
 
 #### Response Phase
-During the response phase the device transmits data at the currently set transmission speed.
+During the response phase the device transmits data back to the host.
 
 ### Commands
 ZUSI uses a command specific frame structure. The first byte of each frame marks the used command, all subsequent bytes will be sent according to frame description. 
