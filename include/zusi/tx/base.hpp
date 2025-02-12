@@ -115,10 +115,13 @@ private:
   /// Delay microseconds
   virtual void delayUs(uint32_t us) const = 0;
 
+  /// Wait for slave operation
+  /// \note Default impl. will block
+  virtual void busy() const;
+
   void resync() const;
   bool ackValid() const;
   bool ack() const;
-  void busy() const;
   uint8_t receiveByte() const;
 
   Mbps _mbps{Mbps::_0_286};
