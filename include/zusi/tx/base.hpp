@@ -115,12 +115,32 @@ private:
   /// Delay microseconds
   virtual void delayUs(uint32_t us) const = 0;
 
+  /// Busy phase
+  ///
+  /// \note Default impl. will block until done
+  virtual void busy() const;
+
+  /// Resynch phase
   void resync() const;
+
+  /// Check ACK Valid
+  ///
+  /// \retval True,   Decoder received package
+  /// \retval False,  Connection error
   bool ackValid() const;
+
+  /// Check ACK
+  ///
+  /// \retval True,   Success
+  /// \retval False,  Error
   bool ack() const;
-  void busy() const;
+
+  /// Receive byte
+  ///
+  /// \return Received data
   uint8_t receiveByte() const;
 
+  /// Transmission speed
   Mbps _mbps{Mbps::_0_286};
 };
 

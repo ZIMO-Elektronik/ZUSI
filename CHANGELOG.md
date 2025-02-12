@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.9.1
+- Made `tx::Base::busy` virtual
+
 ## 0.9.0
 - Add LC-DC query to `tx::Base`
 - Add `Feedback` type
