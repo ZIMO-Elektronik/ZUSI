@@ -75,7 +75,7 @@ class Transmitter : public zusi::tx::Base {
   /// Busy phase
   ///
   /// \note Default impl. will block until done
-  virtual void busy() const;
+  void busy() const final {};
 };
 
 int main() {
