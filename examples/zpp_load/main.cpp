@@ -72,10 +72,8 @@ class Transmitter : public zusi::tx::Base {
   // Delay microseconds
   void delayUs(uint32_t us) const final {}
 
-  /// Busy phase
-  ///
-  /// \note Default impl. will block until done
-  void busy() const final {};
+  /// Optional, busy phase
+  void busy() const final {}
 };
 
 int main() {

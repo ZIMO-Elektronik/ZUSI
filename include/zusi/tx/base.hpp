@@ -117,22 +117,23 @@ private:
 
   /// Busy phase
   ///
-  /// \note Default impl. will block until done
+  /// \note
+  /// Default implementation will block until done
   virtual void busy() const;
 
-  /// Resynch phase
+  /// Resync phase
   void resync() const;
 
   /// Check ACK Valid
   ///
-  /// \retval True,   Decoder received package
-  /// \retval False,  Connection error
+  /// \retval true  Decoder received package
+  /// \retval false Connection error
   bool ackValid() const;
 
   /// Check ACK
   ///
-  /// \retval True,   Success
-  /// \retval False,  Error
+  /// \retval true  Success
+  /// \retval false Error
   bool ack() const;
 
   /// Receive byte
