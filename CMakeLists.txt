@@ -46,11 +46,11 @@ endif()
 target_common_warnings(ZUSI PRIVATE)
 
 if(NOT TARGET Microsoft.GSL::GSL)
-  cpmaddpackage("gh:microsoft/GSL@4.1.0")
+  cpmaddpackage("gh:microsoft/GSL@4.2.0")
 endif()
 
 if(NOT TARGET ZTL::ZTL)
-  cpmaddpackage("gh:ZIMO-Elektronik/ZTL@0.19.1")
+  cpmaddpackage("gh:ZIMO-Elektronik/ZTL@0.20.0")
 endif()
 
 target_link_libraries(
