@@ -337,7 +337,7 @@ Features requests the transmission capabilities of connected devices. Feature bi
   </tbody>
 </table>
 
-This will exit the ZUSI and resume normal operation.
+This will exit ZUSI and resume normal operation.
 
 #### ZPP-LC-DC-Query
 | Length | Name            | Value / Limits | Description                                                                                |
