@@ -89,9 +89,11 @@ Base::State Base::transmitAck() {
 ///
 /// \return State
 Base::State Base::transmitBusy() {
-  if (!waitClock(true)) return State::Error;
   auto const cmd{static_cast<Command>(_packet[0uz])};
-  if (cmd != Command::Exit) writeData(false); // Don't pull low if exiting...
+  /// \todo MXULF did not clock busy prior to <=0.84.112
+  if (cmd != Command::Exit && !waitClock(true)) return State::Error;
+  /// \note Don't pull low if exiting anyhow
+  if (cmd != Command::Exit) writeData(false);
   auto const retval{execute(cmd)};
   if (!waitClock(false)) return State::Error;
   writeData(true);
