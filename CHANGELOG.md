@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.9.2
+- Exit ignores security bytes and CRC ([#10](https://github.com/ZIMO-Elektronik/ZUSI/issues/10))
+
 ## 0.9.1
 - Make `tx::Base::busy` virtual
 

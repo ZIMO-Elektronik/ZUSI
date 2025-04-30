@@ -82,8 +82,6 @@ Base::State Base::transmitAck() {
   if (!waitClock(true)) return State::Error;
   if (_ack == true) writeData(true);
   if (!waitClock(false)) return State::Error;
-  // Exit does not require us to carry on
-  if (static_cast<Command>(_packet[0uz]) == Command::Exit) exit(_packet[3uz]);
   return _ack == true ? State::TransmitBusy : State::Error;
 }
 
@@ -92,8 +90,9 @@ Base::State Base::transmitAck() {
 /// \return State
 Base::State Base::transmitBusy() {
   if (!waitClock(true)) return State::Error;
-  writeData(false);
-  auto const retval{execute(static_cast<Command>(_packet[0uz]))};
+  auto const cmd{static_cast<Command>(_packet[0uz])};
+  if (cmd != Command::Exit) writeData(false); // Don't pull low if exiting...
+  auto const retval{execute(cmd)};
   if (!waitClock(false)) return State::Error;
   writeData(true);
   if (retval == State::ReceiveCommand) spiSlave();
@@ -135,6 +134,10 @@ Base::State Base::execute(Command cmd) {
       std::copy(cbegin(feature_bytes), cend(feature_bytes), begin(_packet));
       _packet.resize(size(feature_bytes));
       retval = State::TransmitData;
+      break;
+    }
+    case Command::Exit: {
+      exit(_packet[3uz]);
       break;
     }
     case Command::ZppLcDcQuery: {
