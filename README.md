@@ -91,19 +91,19 @@ During the response phase the device transmits data back to the host.
 ZUSI uses a command specific frame structure. The first byte of each frame marks the used command, all subsequent bytes will be sent according to frame description. 
 
 #### CV-Read
-| Length | Name       | Value / Limits | Description                                    |
-| ------ | ---------- | -------------- | ---------------------------------------------- |
-| 1 byte | Command    | 0x01           | Command code                                   |
-| 1 byte | Count - 1  | 0 - 255 (=N-1) | Number of CVs to read                          |
-| 4 byte | CV address | 0 - 1023       | Address of the first CV                        |
-| 1 byte | CRC        |                | CRC8 checksum                                  |
-| 1 byte | Resync     | 0x80           | Resync byte                                    |
-|        |            |                |                                                |
-| 1 bit  | ACK valid  |                |                                                |
-| 1 bit  | ACK        |                |                                                |
-| 1 bit  | Busy       |                |                                                |
-| N byte | CV values  |                | Values of the read CVs                         |
-| 1 byte | CRC        |                | CRC8 checksum                                  |
+| Length | Name       | Value / Limits | Description               |
+| ------ | ---------- | -------------- | ------------------------- |
+| 1 byte | Command    | 0x01           | Command code              |
+| 1 byte | Count - 1  | 0 - 255 (=N-1) | Number of CVs to read - 1 |
+| 4 byte | CV address | 0 - 1023       | Address of the first CV   |
+| 1 byte | CRC        |                | CRC8 checksum             |
+| 1 byte | Resync     | 0x80           | Resync byte               |
+|        |            |                |                           |
+| 1 bit  | ACK valid  |                |                           |
+| 1 bit  | ACK        |                |                           |
+| 1 bit  | Busy       |                |                           |
+| N byte | CV values  |                | Values of the read CVs    |
+| 1 byte | CRC        |                | CRC8 checksum             |
 
 CV Read is used to read CV values ​​from a decoder.
 
@@ -111,18 +111,18 @@ CV Read is used to read CV values ​​from a decoder.
 > Current implementations only read one byte at a time.
 
 #### CV-Write
-| Length | Name       | Value / Limits | Description             |
-| ------ |  --------- | -------------- | ----------------------- |
-| 1 byte | Command    | 0x02           | Command code            |
-| 1 byte | Count - 1  | 0 - 255        | Number of CVs to write  |
-| 4 byte | CV address | 0 - 1023       | Address of the first CV |
-| N byte | Values (N) |                | CV values to be written |
-| 1 byte | CRC        |                | CRC8 checksum           |
-| 1 byte | Resync     | 0x80           | Resync byte             |
-|        |            |                |                         |
-| 1 bit  | ACK valid  |                |                         |
-| 1 bit  | ACK        |                |                         |
-| 1 bit  | Busy       |                |                         |
+| Length | Name       | Value / Limits | Description                |
+| ------ |  --------- | -------------- | -------------------------- |
+| 1 byte | Command    | 0x02           | Command code               |
+| 1 byte | Count - 1  | 0 - 255 (=N-1) | Number of CVs to write - 1 |
+| 4 byte | CV address | 0 - 1023       | Address of the first CV    |
+| N byte | Values (N) |                | CV values to be written    |
+| 1 byte | CRC        |                | CRC8 checksum              |
+| 1 byte | Resync     | 0x80           | Resync byte                |
+|        |            |                |                            |
+| 1 bit  | ACK valid  |                |                            |
+| 1 bit  | ACK        |                |                            |
+| 1 bit  | Busy       |                |                            |
 
 CV Write is used to write CV values ​​into a decoder.
 
@@ -130,17 +130,17 @@ CV Write is used to write CV values ​​into a decoder.
 > Current implementations only write one byte at a time.
 
 #### ZPP-Erase
-| Length | Name          | Value / Limits | Description                  |
-| ------ | ------------  | -------------- | ---------------------------- |
-| 1 byte | Command       | 0x04           | Command code                 |
-| 1 byte | Security byte | 0x55           |                              |
-| 1 byte | Security byte | 0xAA           |                              |
-| 1 byte | CRC           |                | CRC8 checksum                |
-| 1 byte | Resync        | 0x80           | Resync byte                  |
-|        |               |                |                              |
-| 1 bit  | ACK valid     |                |                              |
-| 1 bit  | ACK           |                |                              |
-| 1 bit  | Busy          |                |                              
+| Length | Name          | Value / Limits | Description   |
+| ------ | ------------  | -------------- | ------------- |
+| 1 byte | Command       | 0x04           | Command code  |
+| 1 byte | Security byte | 0x55           |               |
+| 1 byte | Security byte | 0xAA           |               |
+| 1 byte | CRC           |                | CRC8 checksum |
+| 1 byte | Resync        | 0x80           | Resync byte   |
+|        |               |                |               |
+| 1 bit  | ACK valid     |                |               |
+| 1 bit  | ACK           |                |               |
+| 1 bit  | Busy          |                |               |
 
 The ZPP Erase command can be used to erase the flash in the decoder.
 
@@ -148,18 +148,18 @@ The ZPP Erase command can be used to erase the flash in the decoder.
 > Deleting a NOR flash can take up to 200s depending on the manufacturer and type.
 
 #### ZPP-Write
-| Length | Name           | Value / Limits | Description                                                  |
-|  ----  |  ------------  | -------------- | ------------------------------------------------------------ |
-| 1 byte | Command        | 0x05           | Command code                                                 |
-| 1 byte | Size           |                | Size of the data block to write into the decoder flash       |
-| 4 byte | Address        |                | Absolute flash address of the first byte of sent flash block |
-| x byte | Data           | up to 256 byte | Block data to be written to decoder flash                    |
-| 1 byte | CRC            |                | CRC8 checksum                                                |
-| 1 byte | Resync         | 0x80           | Resync byte                                                  |
-|        |                |                |                                                              |
-| 1 bit  | ACK valid      |                |                                                              |
-| 1 bit  | ACK            |                |                                                              |
-| 1 bit  | Busy           |                |                                                              |
+| Length | Name           | Value / Limits | Description                |
+|  ----  |  ------------  | -------------- | ---------------------------|
+| 1 byte | Command        | 0x05           | Command code               |
+| 1 byte | Size - 1       | 0 - 255 (N-1)  | Size of the data block - 1 |
+| 4 byte | Address        |                | Address of the data block  |
+| N byte | Data           | up to 256 byte | Data block                 |
+| 1 byte | CRC            |                | CRC8 checksum              |
+| 1 byte | Resync         | 0x80           | Resync byte                |
+|        |                |                |                            |
+| 1 bit  | ACK valid      |                |                            |
+| 1 bit  | ACK            |                |                            |
+| 1 bit  | Busy           |                |                            |
 
 ZPP Write is used to transfer ZPP data.
 
@@ -343,7 +343,7 @@ This will exit ZUSI and resume normal operation.
 | Length | Name            | Value / Limits | Description                                                                                |
 | ------ | --------------- | -------------- | ------------------------------------------------------------------------------------------ |
 | 1 byte | Command         | 0x0D           | Command code                                                                               |
-| 4 byte | Developer code  |                | Developer code (see [ZPP](https://github.com/ZIMO-Elektronik/ZPP)) file format description |
+| 4 byte | Developer code  |                | Developer code (see [ZPP](https://github.com/ZIMO-Elektronik/ZPP) file format description) |
 | 1 byte | CRC             |                | CRC8 checksum                                                                              |
 | 1 byte | Resync          | 0x80           | Resync byte                                                                                |
 |        |                 |                |                                                                                            |
