@@ -21,7 +21,7 @@
 
 namespace zusi {
 
-// Byte positions in ZUSI frame
+// Byte positions in frame
 inline constexpr size_t cmd_pos{0uz};
 inline constexpr size_t data_cnt_pos{1uz};
 inline constexpr size_t addr_pos{2uz};
@@ -70,10 +70,10 @@ constexpr auto data2uint32(RandomIt first) {
                                first[2uz] << 8u | first[3uz] << 0u);
 }
 
-/// uint32 to data
+/// uint32_t to data
 ///
 /// \tparam OutputIt  std::output_iterator
-/// \param  word      Word
+/// \param  word      Word to convert
 /// \param  out       Beginning of the destination range
 /// \return Output iterator one past the last element copied
 template<std::output_iterator<uint8_t> OutputIt>
