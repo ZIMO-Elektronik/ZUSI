@@ -254,10 +254,10 @@ ZPP Write is used to transfer ZPP data.
   </tbody>
 </table>
 
-Features requests the transmission capabilities of connected devices. Feature bits (see baud rate and devices) will be pulled to 0 when at least one decoder does not support the corresponding feature.
+Features requests the transmission capabilities of connected devices. These capabilities consist of a **baud rate** and a **device byte**. In the baud rate byte, decoders set the bit for the **fastest** [timing](#electrical-specification) they support low. In the device byte, bit 7 pulled low indicates if they can operate simultaneously with other devices.
 
 > [!WARNING]  
-> Personal note: I think someone mixed up the baud rate flags 0 and 1. As defined, now the fastest decoder determines the transmission speed, not the slowest. In addition, the CRC is missing in the response of this packet... :cry:
+> The CRC is missing in the response of this packet... :cry:
 
 #### Exit
 <table>
