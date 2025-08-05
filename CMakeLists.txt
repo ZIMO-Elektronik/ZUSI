@@ -50,7 +50,7 @@ if(NOT TARGET Microsoft.GSL::GSL)
 endif()
 
 if(NOT TARGET ZTL::ZTL)
-  cpmaddpackage("gh:ZIMO-Elektronik/ZTL@0.20.0")
+  cpmaddpackage("gh:ZIMO-Elektronik/ZTL@0.21.1")
 endif()
 
 target_link_libraries(
