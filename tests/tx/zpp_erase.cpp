@@ -20,6 +20,7 @@ TEST_F(TxTest, zpp_eraseno_ack_valid) {
   EXPECT_CALL(_mock, transmitBytes(ElementsAre(resync_byte), _0_1));
   EXPECT_CALL(_mock, gpioInput());
   EXPECT_CALL(_mock, readData()).WillOnce(Return(true)); // not ACK valid
+  EXPECT_CALL(_mock, readData()).WillOnce(Return(true)); // invalid ACK
   EXPECT_CALL(_mock, spiMaster());
 
   ASSERT_FALSE(_mock.eraseZpp()) << "Should abort if not ACK valid";

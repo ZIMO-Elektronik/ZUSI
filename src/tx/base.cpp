@@ -32,57 +32,78 @@ void Base::enter() const {
 
 /// Transmit bytes
 ///
-/// \param  packet    Packet
-/// \return Feedback  Returned data (can be empty)
+/// \param  packet                      Packet
+/// \return Feedback                    Returned data (can contain error)
+/// \retval std::errc::connection_reset No Response
+/// \retval std::errc::protocol_error   NAK
+/// \retval std::errc::bad_message      Bad crc
+/// \retval std::errc::invalid_argument Unknown command
 Feedback Base::transmit(Packet const& packet) {
   return transmit({cbegin(packet), size(packet)});
 }
 
 /// Transmit bytes
 ///
-/// \param  bytes     Bytes containing packet
-/// \return Feedback  Returned data (can be empty)
+/// \param  bytes                       Bytes containing packet
+/// \return Feedback                    Returned data (can contain error)
+/// \retval std::errc::connection_reset No Response
+/// \retval std::errc::protocol_error   NAK
+/// \retval std::errc::bad_message      Bad crc
+/// \retval std::errc::invalid_argument Unknown command
 Feedback Base::transmit(std::span<uint8_t const> bytes) {
   switch (std::bit_cast<Command>(bytes.front())) {
     case Command::CvRead:
       if (auto const cv{readCv(data2uint32(&bytes[addr_pos]))})
         return Feedback::value_type{*cv};
+      else return std::unexpected(cv.error());
       break;
     case Command::CvWrite:
-      if (writeCv(data2uint32(&bytes[addr_pos]), bytes[data_pos]))
+      if (auto const result{
+            writeCv(data2uint32(&bytes[addr_pos]), bytes[data_pos])})
         return Feedback::value_type{};
+      else return std::unexpected(result.error());
       break;
     case Command::ZppErase:
-      if (eraseZpp()) return Feedback::value_type{};
+      if (auto const result{eraseZpp()}) return Feedback::value_type{};
+      else return std::unexpected(result.error());
       break;
     case Command::ZppWrite:
-      if (writeZpp(data2uint32(&bytes[addr_pos]),
-                   bytes.subspan(data_pos, bytes[data_cnt_pos] + 1uz)))
+      if (auto const result{
+            writeZpp(data2uint32(&bytes[addr_pos]),
+                     bytes.subspan(data_pos, bytes[data_cnt_pos] + 1uz))})
         return Feedback::value_type{};
+      else return std::unexpected(result.error());
       break;
     case Command::Features:
       if (auto const feats{features()})
         return Feedback::value_type{
           (*feats)[0uz], (*feats)[1uz], (*feats)[2uz], (*feats)[3uz]};
+      else return std::unexpected(feats.error());
       break;
     case Command::Exit:
-      if (exit(bytes[exit_flags_pos])) return Feedback::value_type{};
+      if (auto const result{exit(bytes[exit_flags_pos])})
+        return Feedback::value_type{};
+      else return std::unexpected(result.error());
       break;
     case Command::ZppLcDcQuery: {
       if (auto const valid{lcDcQuery(bytes.subspan<1uz, 4uz>())})
         return Feedback::value_type{*valid};
+      else return std::unexpected(valid.error());
       break;
     }
     default: break;
   }
-  return std::nullopt;
+  return std::unexpected(std::errc::invalid_argument);
 }
 
 /// Read CV
 ///
-/// \param  addr          CV address
-/// \retval std::nullopt  Error
-std::optional<uint8_t> Base::readCv(uint32_t addr) const {
+/// \param  addr                        CV address
+/// \retval uint8_t                     CV value
+/// \retval std::errc::connection_reset No Response
+/// \retval std::errc::protocol_error   NAK
+/// \retval std::errc::bad_message      Bad crc
+std::expected<uint8_t, std::errc> Base::readCv(uint32_t addr) const {
   gsl::final_action spi_master{[this] { spiMaster(); }};
   std::array<uint8_t, 7uz> buf;
   auto it{begin(buf)};
@@ -93,11 +114,15 @@ std::optional<uint8_t> Base::readCv(uint32_t addr) const {
   transmitBytes(buf, _mbps);
   resync();
   gpioInput();
-  if (!ackValid() || !ack()) return {};
+  if (!ackValid()) {
+    ack(); // Complete sequence before return
+    return std::unexpected(std::errc::connection_reset);
+  }
+  if (!ack()) return std::unexpected(std::errc::protocol_error);
   busy();
   auto const cv{receiveByte()};
   if (crc8(cv) == receiveByte()) return cv;
-  return std::nullopt;
+  return std::unexpected(std::errc::bad_message);
 }
 
 /// Write CV
@@ -105,8 +130,10 @@ std::optional<uint8_t> Base::readCv(uint32_t addr) const {
 /// \param  addr  CV address
 /// \param  byte  CV value
 /// \retval true  Success
-/// \retval false Error
-bool Base::writeCv(uint32_t addr, uint8_t byte) const {
+/// \retval std::errc::connection_reset No Response
+/// \retval std::errc::protocol_error   NAK
+std::expected<bool, std::errc> Base::writeCv(uint32_t addr,
+                                             uint8_t byte) const {
   gsl::final_action spi_master{[this] { spiMaster(); }};
   std::array<uint8_t, 8uz> buf;
   auto it{begin(buf)};
@@ -118,16 +145,21 @@ bool Base::writeCv(uint32_t addr, uint8_t byte) const {
   transmitBytes(buf, _mbps);
   resync();
   gpioInput();
-  if (!ackValid() || !ack()) return {};
+  if (!ackValid()) {
+    ack(); // Complete sequence before return
+    return std::unexpected(std::errc::connection_reset);
+  }
+  if (!ack()) return std::unexpected(std::errc::protocol_error);
   busy();
   return true;
 }
 
 /// Erase ZPP
 ///
-/// \retval true  Success
-/// \retval false Error
-bool Base::eraseZpp() const {
+/// \retval true                        Success
+/// \retval std::errc::connection_reset No Response
+/// \retval std::errc::protocol_error   NAK
+std::expected<bool, std::errc> Base::eraseZpp() const {
   gsl::final_action spi_master{[this] { spiMaster(); }};
   std::array<uint8_t, 4uz> buf;
   auto it{begin(buf)};
@@ -138,18 +170,24 @@ bool Base::eraseZpp() const {
   transmitBytes(buf, _mbps);
   resync();
   gpioInput();
-  if (!ackValid() || !ack()) return {};
+  if (!ackValid()) {
+    ack(); // Complete sequence before return
+    return std::unexpected(std::errc::connection_reset);
+  }
+  if (!ack()) return std::unexpected(std::errc::protocol_error);
   busy();
   return true;
 }
 
 /// Write ZPP
 ///
-/// \param  addr  Address
-/// \param  bytes Bytes
-/// \retval true  Success
-/// \retval false Error
-bool Base::writeZpp(uint32_t addr, std::span<uint8_t const> bytes) const {
+/// \param  addr                        Address
+/// \param  bytes                       Bytes
+/// \retval true                        Success
+/// \retval std::errc::connection_reset No Response
+/// \retval std::errc::protocol_error   NAK
+std::expected<bool, std::errc>
+Base::writeZpp(uint32_t addr, std::span<uint8_t const> bytes) const {
   assert(size(bytes) <= 256uz);
   gsl::final_action spi_master{[this] { spiMaster(); }};
   std::array<uint8_t, ZUSI_MAX_PACKET_SIZE> buf;
@@ -162,16 +200,21 @@ bool Base::writeZpp(uint32_t addr, std::span<uint8_t const> bytes) const {
   transmitBytes({cbegin(buf), 6uz + size(bytes) + 1uz}, _mbps);
   resync();
   gpioInput();
-  if (!ackValid() || !ack()) return {};
+  if (!ackValid()) {
+    ack(); // Complete sequence before return
+    return std::unexpected(std::errc::connection_reset);
+  }
+  if (!ack()) return std::unexpected(std::errc::protocol_error);
   busy();
   return true;
 }
 
 /// Features query
 ///
-/// \retval Features      Feature bytes
-/// \retval std::nullopt  Error
-std::optional<Features> Base::features() {
+/// \retval Features                    Feature bytes
+/// \retval std::errc::connection_reset No Response
+/// \retval std::errc::protocol_error   NAK
+std::expected<Features, std::errc> Base::features() {
   gsl::final_action spi_master{[this] { spiMaster(); }};
   std::array<uint8_t, 2uz> buf;
   auto it{begin(buf)};
@@ -180,7 +223,11 @@ std::optional<Features> Base::features() {
   transmitBytes(buf, Mbps::_0_286);
   resync();
   gpioInput();
-  if (!ackValid() || !ack()) return {};
+  if (!ackValid()) {
+    ack(); // Complete sequence before return
+    return std::unexpected(std::errc::connection_reset);
+  }
+  if (!ack()) return std::unexpected(std::errc::protocol_error);
   busy();
   Features const features{
     receiveByte(), receiveByte(), receiveByte(), receiveByte()};
@@ -192,10 +239,11 @@ std::optional<Features> Base::features() {
 
 /// Exit
 ///
-/// \param  flags Flags
-/// \retval true  Success
-/// \retval false Error
-bool Base::exit(uint8_t flags) const {
+/// \param  flags                       Flags
+/// \retval true                        Success
+/// \retval std::errc::connection_reset No Response
+/// \retval std::errc::protocol_error   NAK
+std::expected<bool, std::errc> Base::exit(uint8_t flags) const {
   gsl::final_action spi_master{[this] { spiMaster(); }};
   std::array<uint8_t, 5uz> buf;
   auto it{begin(buf)};
@@ -207,17 +255,23 @@ bool Base::exit(uint8_t flags) const {
   transmitBytes(buf, _mbps);
   resync();
   gpioInput();
-  if (!ackValid() || !ack()) return {};
+  if (!ackValid()) {
+    ack(); // Complete sequence before return
+    return std::unexpected(std::errc::connection_reset);
+  }
+  if (!ack()) return std::unexpected(std::errc::protocol_error);
   busy();
   return true;
 }
 
 /// LC-DC query
 ///
-/// \param  developer_code  Developer code
-/// \retval bool            Load code valid
-/// \retval std::nullopt    Error
-std::optional<bool>
+/// \param  developer_code              Developer code
+/// \retval bool                        Load code valid
+/// \retval std::errc::connection_reset No Response
+/// \retval std::errc::protocol_error   NAK
+/// \retval std::errc::bad_message      Bad crc
+std::expected<bool, std::errc>
 Base::lcDcQuery(std::span<uint8_t const, 4uz> developer_code) const {
   gsl::final_action spi_master{[this] { spiMaster(); }};
   std::array<uint8_t, 6uz> buf;
@@ -228,11 +282,15 @@ Base::lcDcQuery(std::span<uint8_t const, 4uz> developer_code) const {
   transmitBytes(buf, _mbps);
   resync();
   gpioInput();
-  if (!ackValid() || !ack()) return {};
+  if (!ackValid()) {
+    ack(); // Complete sequence before return
+    return std::unexpected(std::errc::connection_reset);
+  }
+  if (!ack()) return std::unexpected(std::errc::protocol_error);
   busy();
   auto const valid{receiveByte()};
   if (crc8(valid) == receiveByte()) return static_cast<bool>(valid);
-  return std::nullopt;
+  return std::unexpected(std::errc::bad_message);
 }
 
 /// Transmit resync byte
