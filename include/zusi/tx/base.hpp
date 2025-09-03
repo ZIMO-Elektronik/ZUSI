@@ -126,26 +126,24 @@ private:
   /// Delay microseconds
   virtual void delayUs(uint32_t us) const = 0;
 
+  /// Resync phase
+  void resync() const;
+
+  /// ACK phase
+  ///
+  /// \return std::errc
+  std::errc ack() const;
+
   /// Busy phase
   ///
   /// \note
   /// Default implementation will block until done
   virtual void busy() const;
 
-  /// Resync phase
-  void resync() const;
-
-  /// Check ACK Valid
+  /// Receive ACK
   ///
-  /// \retval true  Decoder received package
-  /// \retval false Connection error
-  bool ackValid() const;
-
-  /// Check ACK
-  ///
-  /// \retval true  Success
-  /// \retval false Error
-  bool ack() const;
+  /// \return Received ACK
+  bool receiveAck() const;
 
   /// Receive byte
   ///
