@@ -11,7 +11,7 @@
 #pragma once
 
 #include <cstdint>
-#include <optional>
+#include <expected>
 #include <span>
 #include <ztl/inplace_vector.hpp>
 #include "../features.hpp"
@@ -42,51 +42,62 @@ public:
 
   /// Read CV
   ///
-  /// \param  addr          CV address
-  /// \retval std::nullopt  Error
-  std::optional<uint8_t> readCv(uint32_t addr) const;
+  /// \param  addr                        CV address
+  /// \retval uint8_t                     CV value
+  /// \retval std::errc::connection_reset No response
+  /// \retval std::errc::protocol_error   NAK
+  /// \retval std::errc::bad_message      CRC error
+  std::expected<uint8_t, std::errc> readCv(uint32_t addr) const;
 
   /// Write CV
   ///
-  /// \param  addr  CV address
-  /// \param  byte  CV value
-  /// \retval true  Success
-  /// \retval false Error
-  bool writeCv(uint32_t addr, uint8_t byte) const;
+  /// \param  addr                        CV address
+  /// \param  byte                        CV value
+  /// \retval true                        Success
+  /// \retval std::errc::connection_reset No response
+  /// \retval std::errc::protocol_error   NAK
+  std::expected<bool, std::errc> writeCv(uint32_t addr, uint8_t byte) const;
 
   /// Erase ZPP
   ///
-  /// \retval true  Success
-  /// \retval false Error
-  bool eraseZpp() const;
+  /// \retval true                        Success
+  /// \retval std::errc::connection_reset No response
+  /// \retval std::errc::protocol_error   NAK
+  std::expected<bool, std::errc> eraseZpp() const;
 
   /// Write ZPP
   ///
-  /// \param  addr  Address
-  /// \param  bytes Bytes
-  /// \retval true  Success
-  /// \retval false Error
-  bool writeZpp(uint32_t addr, std::span<uint8_t const> bytes) const;
+  /// \param  addr                        Address
+  /// \param  bytes                       Bytes
+  /// \retval true                        Success
+  /// \retval std::errc::connection_reset No response
+  /// \retval std::errc::protocol_error   NAK
+  std::expected<bool, std::errc> writeZpp(uint32_t addr,
+                                          std::span<uint8_t const> bytes) const;
 
   /// Features query
   ///
-  /// \retval Features      Feature bytes
-  /// \retval std::nullopt  Error
-  std::optional<Features> features();
+  /// \retval Features                    Feature bytes
+  /// \retval std::errc::connection_reset No response
+  /// \retval std::errc::protocol_error   NAK
+  std::expected<Features, std::errc> features();
 
   /// Exit
   ///
-  /// \param  flags Flags
-  /// \retval true  Success
-  /// \retval false Error
-  bool exit(uint8_t flags) const;
+  /// \param  flags                       Flags
+  /// \retval true                        Success
+  /// \retval std::errc::connection_reset No response
+  /// \retval std::errc::protocol_error   NAK
+  std::expected<bool, std::errc> exit(uint8_t flags) const;
 
   /// LC-DC query
   ///
-  /// \param  developer_code  Developer code
-  /// \retval bool            Load code valid
-  /// \retval std::nullopt    Error
-  std::optional<bool>
+  /// \param  developer_code              Developer code
+  /// \retval bool                        Load code valid
+  /// \retval std::errc::connection_reset No response
+  /// \retval std::errc::protocol_error   NAK
+  /// \retval std::errc::bad_message      CRC error
+  std::expected<bool, std::errc>
   lcDcQuery(std::span<uint8_t const, 4uz> developer_code) const;
 
 private:
@@ -115,26 +126,24 @@ private:
   /// Delay microseconds
   virtual void delayUs(uint32_t us) const = 0;
 
+  /// Resync phase
+  void resync() const;
+
+  /// ACK phase
+  ///
+  /// \return std::errc
+  std::errc ack() const;
+
   /// Busy phase
   ///
   /// \note
   /// Default implementation will block until done
   virtual void busy() const;
 
-  /// Resync phase
-  void resync() const;
-
-  /// Check ACK Valid
+  /// Receive ACK
   ///
-  /// \retval true  Decoder received package
-  /// \retval false Connection error
-  bool ackValid() const;
-
-  /// Check ACK
-  ///
-  /// \retval true  Success
-  /// \retval false Error
-  bool ack() const;
+  /// \return Received ACK
+  bool receiveAck() const;
 
   /// Receive byte
   ///

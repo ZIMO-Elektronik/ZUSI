@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.9.3
+- Bugfix ACK skipped if ACK valid high ([#13](https://github.com/ZIMO-Elektronik/ZUSI/issues/13))
+
 ## 0.9.2
 - Exit ignores security bytes and CRC ([#10](https://github.com/ZIMO-Elektronik/ZUSI/issues/10))
 

@@ -11,15 +11,18 @@
 #pragma once
 
 #include <cstdint>
-#include <optional>
+#include <expected>
+#include <system_error>
 #include <ztl/inplace_vector.hpp>
 
 namespace zusi {
 
 /// Feedback from decoders
 ///
-/// Either empty (`std::nullopt`) on error, or vector with up to 4 bytes.
+/// - Vector with 0-4 bytes
+/// - std::errc on error
 using Feedback =
-  std::optional<ztl::inplace_vector<uint8_t, ZUSI_MAX_FEEDBACK_SIZE>>;
+  std::expected<ztl::inplace_vector<uint8_t, ZUSI_MAX_FEEDBACK_SIZE>,
+                std::errc>;
 
 } // namespace zusi
