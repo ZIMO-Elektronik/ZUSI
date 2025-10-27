@@ -4,7 +4,7 @@ include(FetchContent)
 FetchContent_Declare(
   CMakeModules
   GIT_REPOSITORY "https://github.com/ZIMO-Elektronik/CMakeModules"
-  GIT_TAG v0.9.5
+  GIT_TAG v0.10.0
   SOURCE_DIR ${CMAKE_BINARY_DIR}/CMakeModules)
 FetchContent_MakeAvailable(CMakeModules)
 
@@ -31,11 +31,14 @@ target_compile_definitions(
   ZUSI PUBLIC ZUSI_MAX_PACKET_SIZE=${ZUSI_MAX_PACKET_SIZE}
               ZUSI_MAX_FEEDBACK_SIZE=${ZUSI_MAX_FEEDBACK_SIZE})
 
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+# https://github.com/espressif/esp-idf/issues/17773
+if(PROJECT_IS_TOP_LEVEL AND NOT ESP_PLATFORM)
   target_include_directories(
     ZUSI
     INTERFACE include
     PRIVATE include/zusi)
+  target_common_warnings(ZUSI PRIVATE)
+  target_common_errors(ZUSI PRIVATE)
 else()
   target_include_directories(
     ZUSI SYSTEM
@@ -43,14 +46,12 @@ else()
     PRIVATE include/zusi)
 endif()
 
-target_common_warnings(ZUSI PRIVATE)
-
 if(NOT TARGET Microsoft.GSL::GSL)
   cpmaddpackage("gh:microsoft/GSL@4.2.0")
 endif()
 
 if(NOT TARGET ZTL::ZTL)
-  cpmaddpackage("gh:ZIMO-Elektronik/ZTL@0.21.1")
+  cpmaddpackage("gh:ZIMO-Elektronik/ZTL@0.23.1")
 endif()
 
 target_link_libraries(
