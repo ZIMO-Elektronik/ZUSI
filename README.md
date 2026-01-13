@@ -6,10 +6,12 @@
 
 ZUSI is a ZIMO specific protocol for the [SUSI](https://normen.railcommunity.de/RCN-600.pdf) bus. It supports [ZPP](https://github.com/ZIMO-Elektronik/ZPP) updates on multiple decoders in parallel with up to 1.8MBaud. In addition, it also supports fast reading and writing of CVs for individual decoders. The protocol is currently supported by the following products:
 - Command stations
+  - [ZIMO KLUG](https://www.zimo.at/web2010/products/KLUG-Kompaktes_Lade_und_Update-Geraet_EN.htm)
   - [ZIMO MXULF](https://www.zimo.at/web2010/products/InfMXULF_EN.htm)
 - Decoders
-  - [ZIMO MN decoders](http://www.zimo.at/web2010/products/mn-nicht-sound-decoder_EN.htm)
-  - [ZIMO small-](http://www.zimo.at/web2010/products/ms-sound-decoder_EN.htm) and [large-scale MS decoders](http://www.zimo.at/web2010/products/ms-sound-decoder-grossbahn_EN.htm)
+  - [ZIMO small-](https://www.zimo.at/web2010/products/ms-sound-decoder_EN.htm) and [large-scale MS decoders](https://www.zimo.at/web2010/products/ms-sound-decoder-grossbahn_EN.htm)
+  - [ZIMO MN decoders](https://www.zimo.at/web2010/products/mn-nicht-sound-decoder_EN.htm)
+  - [ZIMO FS decoders](https://www.zimo.at/web2010/products/funktionsdecoder_EN.htm)
   - [ZIMO small-](http://www.zimo.at/web2010/products/lokdecoder_EN.htm) and [large-scale MX decoders](http://www.zimo.at/web2010/products/lokdecodergrosse_EN.htm)
 
 <details>
