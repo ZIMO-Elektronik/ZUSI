@@ -63,14 +63,14 @@ The transmission is generally divided into 5 phases:
 - [Busy Phase](#busy-phase)
 - [Response Phase](#response-phase)
 
-The following graphic shows the transmission of a [CV Read](#cv-read) packet including response. After the command has been transmitted, including some data, a resync byte is sent. The direction of the data is then reversed and all connected devices have the opportunity to respond. This response consists of an ACK and Busy phase and, if provided for by the command, the transmission of the requested data.
+The following graphic shows the transmission of a [CV Read](#cv-read) packet including response. After the command has been transmitted, including some data, a [resync](#resynchronization-phase) byte is sent. The direction of the data is then reversed and all connected devices have the opportunity to respond. This response consists of an [ACK](#ack-phase) and [Busy](#busy-phase) phase and, if provided for by the command, the transmission of the requested data.
 ![transmission](./data/images/transmission.png)
 
 #### Command phase
 During the command phase the host transmits a [command](#commands) including any data at the currently set transmission speed.
 
 #### Resynchronization Phase
-To avoid problems with the MX644, a resynchronization phase has been introduced between host transmission and device response. This phase consists of a delay of at least 10µs, followed by a transmission of the byte **0x80**. The clock period for the transmission is 10µs, which corresponds to a an SPI frequency of 0.1Mbps. **This asynchronous clock period is maintained for the complete feedback**.
+To avoid problems with the MX644, a resynchronization phase has been introduced between host transmission and device response. This phase consists of a delay (at least 10µs), followed by a transmission of the byte **0x80** and another delay. The clock period for the transmission is 10µs, which corresponds to a an SPI frequency of 0.1Mbps. **This asynchronous clock period is maintained for the complete feedback**.
 
 To catch asynchronous behavior, the state-machine of a decoder will be reset after 10ms of no activity on the clock. This can be used to resync all decoders.
 

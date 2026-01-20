@@ -138,7 +138,7 @@ concise "Device" as TX
 +35 is high
 +35 is low
 
-' Small delay prior to resync
+' Small delay before resync
 3955 is low
 +200 is low
 
@@ -160,20 +160,24 @@ concise "Device" as TX
 +50 is high
 +50 is low
 
+' Small delay after resync
+4955 is low
++200 is low
+
 ' ACK valid
-4955 is high
+5155 is high
 +100 is low
 
 ' ACK
-5255 is high
+5455 is high
 +100 is low
 
 ' Busy
-5555 is high
+5755 is high
 +100 is low
 
 ' CV
-6055 is high
+6255 is high
 +100 is low
 +200 is high
 +100 is low
@@ -191,7 +195,7 @@ concise "Device" as TX
 +100 is low
 
 ' CRC8
-8455 is high
+8655 is high
 +100 is low
 +200 is high
 +100 is low
@@ -281,19 +285,19 @@ concise "Device" as TX
 +50 is low
 
 ' ACK valid
-4955 is low
+5155 is low
 +100 is low
 
 ' ACK
-5255 is high
+5455 is high
 +100 is high
 
 ' Busy
-5555 is low
+5755 is low
 +400 is high
 
 ' CV
-6055 is low
+6255 is low
 +100 is low
 +200 is low
 +100 is low
@@ -309,7 +313,7 @@ concise "Device" as TX
 +100 is low
 
 ' CRC8
-8455 is low
+8655 is low
 +100 is low
 +200 is high
 +100 is high
@@ -329,11 +333,11 @@ concise "Device" as TX
 
 @TX
 0 is {hidden}
-4955 is ACK0
-5255 is ACK1
-5555 is Busy
-6055 is "CV (0x08)"
-8455 is "CRC8 (0xC2)"
-10855 is {hidden}
+5155 is ACK0
+5455 is ACK1
+5755 is Busy
+6255 is "CV (0x08)"
+8655 is "CRC8 (0xC2)"
+11055 is {hidden}
 
 @enduml
