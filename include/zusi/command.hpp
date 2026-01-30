@@ -14,7 +14,7 @@
 
 namespace zusi {
 
-enum class Command : uint8_t {
+enum struct Command : uint8_t {
   None = 0x00u,
   CvRead = 0x01u,
   CvWrite = 0x02u,

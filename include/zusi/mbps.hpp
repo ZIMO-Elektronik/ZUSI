@@ -14,7 +14,7 @@
 
 namespace zusi {
 
-enum class Mbps : uint8_t {
+enum struct Mbps : uint8_t {
   _0_1,   // 10µs ~ 0.1Mbps
   _0_286, // 3.5µs ~ 0.286Mbps
   _1_364, // 0.733µs ~ 1.364Mbps

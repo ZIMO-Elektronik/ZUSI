@@ -106,7 +106,7 @@ private:
   /// Toggle front- and rear lights
   virtual void toggleLights() const {}
 
-  enum class State : uint8_t {
+  enum struct State : uint8_t {
     ReceiveCommand,
     ReceiveData,
     ReceiveResync,

@@ -17,6 +17,7 @@
 #include "../features.hpp"
 #include "../feedback.hpp"
 #include "../mbps.hpp"
+#include "../packet.hpp"
 
 namespace zusi::tx {
 
