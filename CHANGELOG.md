@@ -1,6 +1,6 @@
 # Changelog
 
-##
+## 0.9.4
 - Bugfix add delay after resync ([#16](https://github.com/ZIMO-Elektronik/ZUSI/issues/16))
 
 ## 0.9.3
