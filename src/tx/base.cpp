@@ -269,6 +269,7 @@ Base::lcDcQuery(std::span<uint8_t const, 4uz> developer_code) const {
 void Base::resync() const {
   delayUs(10u);
   transmitBytes({&resync_byte, 1uz}, Mbps::_0_1);
+  delayUs(10u);
 }
 
 /// ACK phase

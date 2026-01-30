@@ -1,5 +1,8 @@
 # Changelog
 
+##
+- Bugfix add delay after resync ([#16](https://github.com/ZIMO-Elektronik/ZUSI/issues/16))
+
 ## 0.9.3
 - Bugfix ACK skipped if ACK valid high ([#13](https://github.com/ZIMO-Elektronik/ZUSI/issues/13))
 
