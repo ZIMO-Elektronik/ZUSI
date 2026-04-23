@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.5
+- Bufix correct assert in `make_cv_write_packet` builder ([#18](https://github.com/ZIMO-Elektronik/ZUSI/issues/18))
+- Build update ZTL to 0.25.0
+
 ## 0.9.4
 - Bugfix add delay after resync ([#16](https://github.com/ZIMO-Elektronik/ZUSI/issues/16))
 
