@@ -110,7 +110,7 @@ inline constexpr Packet make_cv_write_packet(uint8_t count,
                                              uint32_t address,
                                              std::span<uint8_t const> values) {
   // Count must match value list
-  assert((count - 1uz) == size(values));
+  assert(count == (size(values) - 1uz));
 
   Packet packet{};
   auto it{std::back_inserter(packet)};
