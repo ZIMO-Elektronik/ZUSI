@@ -1,7 +1,11 @@
 # Changelog
 
+## 0.9.6
+- Bugfix add busy phase to Exit
+- Remove MXULF <=0.84.112 workaround for Exit
+
 ## 0.9.5
-- Bufix correct assert in `make_cv_write_packet` builder ([#18](https://github.com/ZIMO-Elektronik/ZUSI/issues/18))
+- Bugfix correct assert in `make_cv_write_packet` builder ([#18](https://github.com/ZIMO-Elektronik/ZUSI/issues/18))
 - Build update ZTL to 0.25.0
 
 ## 0.9.4
