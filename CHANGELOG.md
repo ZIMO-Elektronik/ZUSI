@@ -1,8 +1,10 @@
 # Changelog
 
 ## 0.9.5
-- Bufix correct assert in `make_cv_write_packet` builder ([#18](https://github.com/ZIMO-Elektronik/ZUSI/issues/18))
 - Build update ZTL to 0.25.0
+- Remove MXULF <=0.84.112 workaround for Exit
+- Bugfix add busy phase to Exit ([#20](https://github.com/ZIMO-Elektronik/ZUSI/issues/20))
+- Bugfix correct assert in `make_cv_write_packet` builder ([#18](https://github.com/ZIMO-Elektronik/ZUSI/issues/18))
 
 ## 0.9.4
 - Bugfix add delay after resync ([#16](https://github.com/ZIMO-Elektronik/ZUSI/issues/16))
