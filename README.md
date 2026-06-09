@@ -366,7 +366,7 @@ A ZPP-LC-DC query can be used to check whether the decoders contain a valid load
 4. [ZPP-Erase](#zpp-erase)
 5. [ZPP-Write](#zpp-write)
 7. [Exit](#exit)
-8. Leave voltage switched on for at least 1s
+8. Leave voltage switched on for at least 2s
 
 ## Getting Started
 ### Prerequisites
@@ -378,13 +378,13 @@ This library is meant to be consumed with CMake.
 
 ```cmake
 # Either by including it with CPM
-cpmaddpackage("gh:ZIMO-Elektronik/ZUSI@0.9.4")
+cpmaddpackage("gh:ZIMO-Elektronik/ZUSI@0.9.5")
 
 # or the FetchContent module
 FetchContent_Declare(
   ZUSI
   GIT_REPOSITORY "https://github.com/ZIMO-Elektronik/ZUSI"
-  GIT_TAG v0.9.4)
+  GIT_TAG v0.9.5)
 
 target_link_libraries(YourTarget PRIVATE ZUSI::ZUSI)
 ```
