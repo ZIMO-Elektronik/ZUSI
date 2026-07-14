@@ -65,9 +65,11 @@ constexpr bool is_valid_command(uint8_t cmd) {
 /// \return uint32_t
 template<std::random_access_iterator RandomIt>
 requires(sizeof(std::iter_value_t<RandomIt>) == 1uz)
-constexpr auto data2uint32(RandomIt first) {
-  return static_cast<uint32_t>(first[0uz] << 24u | first[1uz] << 16u |
-                               first[2uz] << 8u | first[3uz] << 0u);
+constexpr uint32_t data2uint32(RandomIt first) {
+  return static_cast<uint32_t>(first[0uz]) << 24u |
+         static_cast<uint32_t>(first[1uz]) << 16u |
+         static_cast<uint32_t>(first[2uz]) << 8u |
+         static_cast<uint32_t>(first[3uz]) << 0u;
 }
 
 /// uint32_t to data
@@ -77,11 +79,11 @@ constexpr auto data2uint32(RandomIt first) {
 /// \param  out       Beginning of the destination range
 /// \return Output iterator one past the last element copied
 template<std::output_iterator<uint8_t> OutputIt>
-inline constexpr auto uint32_2data(uint32_t word, OutputIt out) {
-  *out++ = static_cast<uint8_t>((word & 0xFF00'0000u) >> 24u);
-  *out++ = static_cast<uint8_t>((word & 0x00FF'0000u) >> 16u);
-  *out++ = static_cast<uint8_t>((word & 0x0000'FF00u) >> 8u);
-  *out++ = static_cast<uint8_t>((word & 0x0000'00FFu) >> 0u);
+constexpr auto uint32_2data(uint32_t word, OutputIt out) {
+  *out++ = static_cast<uint8_t>(word >> 24u);
+  *out++ = static_cast<uint8_t>(word >> 16u);
+  *out++ = static_cast<uint8_t>(word >> 8u);
+  *out++ = static_cast<uint8_t>(word >> 0u);
   return out;
 }
 
