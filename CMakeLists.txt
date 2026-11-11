@@ -20,6 +20,9 @@ set(ZUSI_MAX_PACKET_SIZE
 set(ZUSI_MAX_FEEDBACK_SIZE
     4u
     CACHE STRING "Maximum size of feedback in bytes")
+set(ZUSI_MAX_LC_DC_QUERY_ATTEMPTS
+    8u
+    CACHE STRING "Maximum number of attempts for LC DC query")
 
 file(GLOB_RECURSE SRC src/*.cpp)
 add_library(ZUSI STATIC ${SRC})
@@ -28,8 +31,10 @@ add_library(ZUSI::ZUSI ALIAS ZUSI)
 target_compile_features(ZUSI PUBLIC cxx_std_23)
 
 target_compile_definitions(
-  ZUSI PUBLIC ZUSI_MAX_PACKET_SIZE=${ZUSI_MAX_PACKET_SIZE}
-              ZUSI_MAX_FEEDBACK_SIZE=${ZUSI_MAX_FEEDBACK_SIZE})
+  ZUSI
+  PUBLIC ZUSI_MAX_PACKET_SIZE=${ZUSI_MAX_PACKET_SIZE}
+         ZUSI_MAX_FEEDBACK_SIZE=${ZUSI_MAX_FEEDBACK_SIZE}
+         ZUSI_MAX_LC_DC_QUERY_ATTEMPTS=${ZUSI_MAX_LC_DC_QUERY_ATTEMPTS})
 
 # https://github.com/espressif/esp-idf/issues/17773
 if(PROJECT_IS_TOP_LEVEL AND NOT ESP_PLATFORM)

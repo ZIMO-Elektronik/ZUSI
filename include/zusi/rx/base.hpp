@@ -129,10 +129,11 @@ private:
   bool transmitByte(uint8_t byte) const;
   bool ackOrNack();
 
-  Packet _packet{}; ///< Receive/transmit
-  uint8_t _crc{};   ///< CRC8
-  State _state{};   ///< State
-  bool _ack{};      ///< Ack/nak
+  Packet _packet{};            ///< Receive/transmit
+  size_t _lc_dc_query_count{}; ///< Count LC-DC queries
+  uint8_t _crc{};              ///< CRC8
+  State _state{};              ///< State
+  bool _ack{};                 ///< Ack/nak
 };
 
 } // namespace zusi::rx
