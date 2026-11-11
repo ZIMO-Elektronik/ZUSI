@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.9.6
+- Bugfix mitigate LC-DC brute force attacks ([#23](https://github.com/ZIMO-Elektronik/ZUSI/issues/23))
+
 ## 0.9.5
 - Build update ZTL to 0.25.0
 - Remove MXULF <=0.84.112 workaround for Exit

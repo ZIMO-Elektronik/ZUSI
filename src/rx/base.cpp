@@ -142,7 +142,9 @@ Base::State Base::execute(Command cmd) {
     }
     case Command::ZppLcDcQuery: {
       std::span<uint8_t const, 4uz> developer_code{&_packet[1uz], 4uz};
-      _packet[0uz] = loadCodeValid(developer_code);
+      _packet[0uz] = ++_lc_dc_query_count <= ZUSI_MAX_LC_DC_QUERY_ATTEMPTS
+                       ? loadCodeValid(developer_code)
+                       : 0u;
       _packet[1uz] = crc8(_packet[0uz]);
       _packet.resize(2uz);
       retval = State::TransmitData;

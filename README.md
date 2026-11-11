@@ -114,7 +114,7 @@ CV Read is used to read CV values ​​from a decoder.
 
 #### CV-Write
 | Length | Name       | Value / Limits | Description                |
-| ------ |  --------- | -------------- | -------------------------- |
+| ------ | ---------- | -------------- | -------------------------- |
 | 1 byte | Command    | 0x02           | Command code               |
 | 1 byte | Count - 1  | 0 - 255 (=N-1) | Number of CVs to write - 1 |
 | 4 byte | CV address | 0 - 1023       | Address of the first CV    |
@@ -133,7 +133,7 @@ CV Write is used to write CV values ​​into a decoder.
 
 #### ZPP-Erase
 | Length | Name          | Value / Limits | Description   |
-| ------ | ------------  | -------------- | ------------- |
+| ------ | ------------- | -------------- | ------------- |
 | 1 byte | Command       | 0x04           | Command code  |
 | 1 byte | Security byte | 0x55           |               |
 | 1 byte | Security byte | 0xAA           |               |
@@ -150,18 +150,18 @@ The ZPP Erase command can be used to erase the flash in the decoder.
 > Deleting a NOR flash can take up to 200s depending on the manufacturer and type.
 
 #### ZPP-Write
-| Length | Name           | Value / Limits | Description                |
-|  ----  |  ------------  | -------------- | ---------------------------|
-| 1 byte | Command        | 0x05           | Command code               |
-| 1 byte | Size - 1       | 0 - 255 (N-1)  | Size of the data block - 1 |
-| 4 byte | Address        |                | Address of the data block  |
-| N byte | Data           | up to 256 byte | Data block                 |
-| 1 byte | CRC            |                | CRC8 checksum              |
-| 1 byte | Resync         | 0x80           | Resync byte                |
-|        |                |                |                            |
-| 1 bit  | ACK valid      |                |                            |
-| 1 bit  | ACK            |                |                            |
-| 1 bit  | Busy           |                |                            |
+| Length | Name      | Value / Limits | Description                |
+| ------ | --------- | -------------- | -------------------------- |
+| 1 byte | Command   | 0x05           | Command code               |
+| 1 byte | Size - 1  | 0 - 255 (N-1)  | Size of the data block - 1 |
+| 4 byte | Address   |                | Address of the data block  |
+| N byte | Data      | up to 256 byte | Data block                 |
+| 1 byte | CRC       |                | CRC8 checksum              |
+| 1 byte | Resync    | 0x80           | Resync byte                |
+|        |           |                |                            |
+| 1 bit  | ACK valid |                |                            |
+| 1 bit  | ACK       |                |                            |
+| 1 bit  | Busy      |                |                            |
 
 ZPP Write is used to transfer ZPP data.
 
@@ -356,6 +356,7 @@ This will exit ZUSI and resume normal operation.
 | 1 byte | CRC             |                | CRC8 checksum                                                                              |
 
 A ZPP-LC-DC query can be used to check whether the decoders contain a valid load code before deleting the flash.
+After `ZUSI_MAX_LC_DC_QUERY_ATTEMPTS` queries (default: 8, configurable in CMake), all subsequent queries return `0x00`, even if the load code is valid.
 
 ### Typical processes
 #### ZPP Update
